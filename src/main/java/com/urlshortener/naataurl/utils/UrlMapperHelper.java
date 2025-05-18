@@ -20,6 +20,10 @@ public class UrlMapperHelper {
     private @Autowired UrlService urlService;
     private @Autowired JwtUtils jwtUtil;
     
+    public UrlService getUrlService() {
+        return urlService;
+    }
+    
     public String getShortUrl(String originalUrl, Long userId){
         UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl);
         if(urlMapper != null){

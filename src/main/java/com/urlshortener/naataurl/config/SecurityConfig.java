@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.urlshortener.naataurl.security.JwtAuthenticationFilter;
 import com.urlshortener.naataurl.service.CustomOAuth2UserService;
@@ -29,11 +30,20 @@ public class SecurityConfig {
     }
 
     @Bean
+    public RequestMatcher shortUrlMatcher() {
+        return request -> {
+            String path = request.getServletPath();
+            return path.matches("^/[^/]+$"); // e.g., /abc123
+        };
+    }
+
+    @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/oauth2/**").permitAll()
+                .requestMatchers(shortUrlMatcher()).permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )

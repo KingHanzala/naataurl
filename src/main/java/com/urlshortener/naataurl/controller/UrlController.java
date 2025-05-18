@@ -4,20 +4,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.urlshortener.naataurl.utils.UrlMapperHelper;
+import com.urlshortener.naataurl.persistence.model.UrlMapper;
 
 @RestController
-@RequestMapping("/api")
 public class UrlController {
 
     private @Autowired UrlMapperHelper urlMapperHelper;
 
-    @PostMapping("/create-url")
+    @PostMapping("/api/create-url")
     public ResponseEntity<?> createShortUrl(@RequestBody UrlRequest request, Authentication authentication){
         Long userId = null;
         try{
@@ -33,6 +34,17 @@ public class UrlController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short Url Not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(shortUrl);
+    }
+
+    @GetMapping("/{shortUrl}")
+    public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl){
+        UrlMapper urlMapper = urlMapperHelper.getUrlService().findByShortUrl(shortUrl);
+        if(urlMapper == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
+        }
+        return ResponseEntity.status(HttpStatus.FOUND)
+            .header("Location", urlMapper.getOriginalUrl())
+            .build();
     }
 }
 
