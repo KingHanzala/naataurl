@@ -16,7 +16,7 @@ import com.urlshortener.naataurl.service.OAuth2LoginSuccessHandler;
 @EnableWebSecurity
 public class SecurityConfig {
 
-     @Bean
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -24,8 +24,10 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("*/auth/**").permitAll()
+                .requestMatchers("/", "/auth/**", "/oauth2/**").permitAll()
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
@@ -47,6 +49,4 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler oAuth2LoginSuccessHandler() {
         return new OAuth2LoginSuccessHandler();
     }
-    
-    
 }
