@@ -123,4 +123,13 @@ public class JwtUtils {
             throw new RuntimeException("Error validating token", e);
         }
     }
+
+    public Claims validateTokenAndGetClaims(String token) {
+        return Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+    }
+    
 }
