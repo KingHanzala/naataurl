@@ -1,6 +1,8 @@
-DROP TABLE IF EXISTS public.users;
+DROP Sequence if exists o1_user_id_seq;
+CREATE Sequence o1_user_id_seq;
+
 CREATE TABLE public.users (
-    user_id BIGSERIAL NOT NULL,
+    user_id BIGINT NOT NULL default nextval('o1_user_id_seq'),
     user_name VARCHAR(128) NOT NULL,
     email VARCHAR(128) NOT NULL UNIQUE,
     password_hash VARCHAR(128) NOT NULL,

@@ -1,6 +1,9 @@
+DROP Sequence if exists o1_url_id_seq;
+CREATE Sequence o1_url_id_seq;
+
 DROP TABLE IF EXISTS public.url_mapper;
 CREATE TABLE public.url_mapper (
-    url_id BIGSERIAL NOT NULL,
+    url_id BIGINT NOT NULL default nextval('o1_url_id_seq'),
     original_url VARCHAR(2048) NOT NULL,
     short_url VARCHAR(128) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
