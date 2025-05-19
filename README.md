@@ -8,6 +8,7 @@ A Spring Boot-based URL shortener backend with JWT authentication and Redis cach
 - [Running the Application](#running-the-application)
 - [API Endpoints](#api-endpoints)
   - [Auth APIs](#auth-apis-auth)
+  - [OAuth2 APIs](#oauth2-apis)
   - [URL Shortener APIs](#url-shortener-apis)
 - [Authentication](#authentication)
 - [CORS & Frontend Integration](#cors--frontend-integration)
@@ -66,6 +67,16 @@ This project provides a backend for a URL shortener service. It supports user re
 
 ---
 
+### OAuth2 APIs (Provided by Spring Security)
+
+#### `GET /oauth2/authorization/google`
+- **Description:** Initiates the OAuth2 login flow for Google. Redirects the user to Google's consent screen.
+
+#### `GET /oauth2/authorization/github`
+- **Description:** Initiates the OAuth2 login flow for GitHub. Redirects the user to GitHub's consent screen.
+
+---
+
 ### URL Shortener APIs
 
 #### `POST /api/create-url`
@@ -89,6 +100,7 @@ This project provides a backend for a URL shortener service. It supports user re
 ## Authentication
 - All `/api/*` endpoints require a valid JWT token in the `Authorization` header.
 - Auth endpoints (`/auth/*`) are public except for logout.
+- OAuth2 endpoints (`/oauth2/authorization/*`) are provided by Spring Security and are used for social login.
 
 ## CORS & Frontend Integration
 - CORS is enabled for `http://localhost:3000` by default (see `SecurityConfig.java`).
