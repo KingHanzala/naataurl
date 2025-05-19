@@ -12,27 +12,24 @@ import com.urlshortener.naataurl.persistence.repository.UrlMapperRepository;
 public class UrlService {
     private @Autowired UrlMapperRepository urlMapperRespository;
     
-    public UrlMapper findByOriginalUrl(String originalUrl){
-        UrlMapper urlMapper = urlMapperRespository.findByOriginalUrl(originalUrl);
-        return urlMapper;
+    public UrlMapper findByOriginalUrl(String originalUrl, Long userId){
+        return urlMapperRespository.findByOriginalUrlAndUserId(originalUrl, userId);
     }
 
     public UrlMapper findByShortUrl(String shortUrl){
-        UrlMapper urlMapper = urlMapperRespository.findByShortUrl(shortUrl);
-        return urlMapper;
+        return urlMapperRespository.findByShortUrl(shortUrl);
     }
 
     public List<UrlMapper> findByUserId(Long userId){
-       List<UrlMapper> urlMapperList = urlMapperRespository.findByUserId(userId);
-        return urlMapperList;
+        return urlMapperRespository.findByUserId(userId);
     }
 
     public Long getNextUrlId(){
         return urlMapperRespository.getNextId();
     }
 
-    public UrlMapper saveUrlMapper(UrlMapper urlMapper){
-        return urlMapperRespository.save(urlMapper);
+    public void saveUrlMapper(UrlMapper urlMapper){
+        urlMapperRespository.save(urlMapper);
     }
 
 }

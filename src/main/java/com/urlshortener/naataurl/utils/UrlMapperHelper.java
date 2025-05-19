@@ -2,6 +2,9 @@ package com.urlshortener.naataurl.utils;
 
 import java.util.Date;
 
+import com.urlshortener.naataurl.persistence.model.User;
+import com.urlshortener.naataurl.service.UserService;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,37 +20,71 @@ public class UrlMapperHelper {
     private static final Logger logger = LoggerFactory.getLogger(UrlMapperHelper.class);
     
     private static final String BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final long MAX_ID = 1_000_000_000L;
+
+    @Getter
     private @Autowired UrlService urlService;
+    private @Autowired UserService userService;
     private @Autowired JwtUtils jwtUtil;
-    
-    public UrlService getUrlService() {
-        return urlService;
-    }
-    
-    public String getShortUrl(String originalUrl, Long userId){
-        UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl);
-        if(urlMapper != null){
+
+    public String getShortUrl(String originalUrl, Long userId) throws Exception {
+        UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
+        if (urlMapper != null) {
             return urlMapper.getShortUrl();
         }
+
+        User user = userService.findByUserId(userId);
+        if (user == null) {
+            logger.info("User not found");
+            return null;
+        } else if (user.getUsageCredits() == 0) {
+            throw new Exception();
+        } else {
+            user.decrementCredits();
+        }
+
         Long urlId = urlService.getNextUrlId();
-        String shortUrl = hashUrl(urlId);
+        String shortUrl = null;
+        try {
+            shortUrl = hashUrl(urlId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e);
+        }
         urlMapper = new UrlMapper();
         urlMapper.setUrlId(urlId);
         urlMapper.setUserId(userId);
         urlMapper.setOriginalUrl(originalUrl);
         urlMapper.setShortUrl(shortUrl);
         urlMapper.setCreatedAt(new Date());
-        urlService.saveUrlMapper(urlMapper);
+        try {
+            urlService.saveUrlMapper(urlMapper);
+        } catch (Exception e) {
+            user.incrementCredits();
+            throw new RuntimeException(e);
+        }
+        userService.saveUser(user);
         return shortUrl;
     }
 
-    public String hashUrl(Long value){
-        StringBuilder sb = new StringBuilder();
-        while (value > 0) {
-            sb.append(BASE62.charAt((int) (value % 62)));
-            value /= 62;
+    public String hashUrl(long id) {
+        if (id < 0 || id > MAX_ID) {
+            throw new IllegalArgumentException("ID must be between 0 and " + MAX_ID);
         }
-        return sb.reverse().toString();
+
+        long reversed = MAX_ID - id;
+
+        if (reversed == 0) {
+            return String.valueOf(BASE62.charAt(0));
+        }
+
+        StringBuilder sb = new StringBuilder();
+        while (reversed > 0) {
+            int remainder = (int) (reversed % 62);
+            sb.insert(0, BASE62.charAt(remainder));
+            reversed /= 62;
+        }
+
+        return sb.toString();
     }
 
     public Long getUserIdFromAuthentication(Authentication authentication) {

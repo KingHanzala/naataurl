@@ -42,75 +42,14 @@ public class User {
     @Column(name = "deleted_at")
     private Date deletedAt;
 
-    // Getter and Setter for userId
-    public Long getUserId() {
-        return userId;
+    @Column(name = "usage_credits", nullable = false)
+    private Long usageCredits = 5L;
+
+    public void decrementCredits(){
+        this.usageCredits --;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    // Getter and Setter for userName
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    // Getter and Setter for userEmail
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
-
-    // Getter and Setter for userPassword
-    public String getUserPassword() {
-        return userPassword;
-    }
-
-    public void setUserPassword(String userPassword) {
-        this.userPassword = userPassword;
-    }
-
-    // Getter and Setter for createdAt
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    // Getter and Setter for updatedAt
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    // Getter and Setter for isDeleted
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean isDeleted) {
-        this.isDeleted = isDeleted;
-    }
-
-    // Getter and Setter for deletedAt
-    public Date getDeletedAt() {
-        return deletedAt;
-    }
-
-    public void setDeletedAt(Date deletedAt) {
-        this.deletedAt = deletedAt;
+    public void incrementCredits(){
+        this.usageCredits ++;
     }
 }

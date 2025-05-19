@@ -1,6 +1,6 @@
 # naataurl
 
-A Spring Boot-based URL shortener backend with JWT authentication and Redis caching.
+A Spring Boot-based URL shortener backend with JWT authentication
 
 ## Table of Contents
 - [Overview](#overview)
@@ -12,25 +12,23 @@ A Spring Boot-based URL shortener backend with JWT authentication and Redis cach
   - [URL Shortener APIs](#url-shortener-apis)
 - [Authentication](#authentication)
 - [CORS & Frontend Integration](#cors--frontend-integration)
-- [Docker/Redis](#dockerredis)
 
 ---
 
 ## Overview
-This project provides a backend for a URL shortener service. It supports user registration, login, JWT-based authentication, and URL shortening. Redis is used for caching, and PostgreSQL is the default database.
+This project provides a backend for a URL shortener service. It supports user registration, login, JWT-based authentication, and URL shortening. PostgreSQL is the default database.
 
 ## Setup & Requirements
 - Java 17+
 - Maven
-- Redis (see Docker section)
 - PostgreSQL (configure in `application.properties`)
 
 ## Running the Application
 1. **Clone the repository**
-2. **Start Redis (optional, for caching):**
-   ```sh
-   docker-compose up -d
-   ```
+2. **Clean and install** 
+```sh
+  mvn clean install
+  ```
 3. **Build and run the Spring Boot app:**
    ```sh
    mvn spring-boot:run
@@ -49,6 +47,9 @@ This project provides a backend for a URL shortener service. It supports user re
   ```json
   { "token": "<JWT>", "user": { ... } }
   ```
+- **Error Codes:**
+  - `400 Bad Request`: Invalid email or password.
+  - `401 Unauthorized`: User is not registered.
 - **Description:** Logs in a user and returns a JWT token.
 
 #### `POST /auth/register`
@@ -60,6 +61,8 @@ This project provides a backend for a URL shortener service. It supports user re
   ```json
   { "token": "<JWT>", "user": { ... } }
   ```
+- **Error Codes:**
+  - `400 Bad Request`: Email already exists.
 - **Description:** Registers a new user and returns a JWT token.
 
 #### `POST /auth/logout`
@@ -88,12 +91,17 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Response:**
   ```json
-  "shortUrl"
+  {"shortUrl": "<shortUrl>"}
   ```
+- **Error Codes:**
+  - `401 Unauthorized`: Invalid authentication.
+  - `404 Not Found`: Short URL not found.
 - **Description:** Creates a short URL for the authenticated user.
 
 #### `GET /{shortUrl}`
 - **Description:** Redirects to the original URL. No authentication required.
+- **Error Codes:**
+  - `404 Not Found`: Short URL not found.
 
 ---
 
@@ -106,17 +114,8 @@ This project provides a backend for a URL shortener service. It supports user re
 - CORS is enabled for `http://localhost:3000` by default (see `SecurityConfig.java`).
 - Update the allowed origins in `SecurityConfig` if your frontend runs elsewhere.
 
-## Docker/Redis
-- Redis is required for caching. Start it with:
-  ```sh
-  docker-compose up -d
-  ```
-- Default Redis port: `6379`
-
----
-
 ## Notes
-- Update your database and Redis connection settings in `application.properties` as needed.
+- Update your database connection settings in `application.properties` as needed.
 - For OAuth2 login, see additional configuration in the backend (not covered here).
 
 ---
