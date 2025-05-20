@@ -23,14 +23,20 @@ This project provides a backend for a URL shortener service. It supports user re
 - Java 17+
 - Maven
 - PostgreSQL (configure in `application.properties`)
+- SendGrid API Key for email functionality
 
 ## Running the Application
 1. **Clone the repository**
-2. **Clean and install** 
-```sh
-  mvn clean install
-  ```
-3. **Build and run the Spring Boot app:**
+2. **Set up environment variables:**
+   ```sh
+   export SENDGRID_API_KEY=your_sendgrid_api_key
+   export MAIL_FROM=your_verified_sender_email
+   ```
+3. **Clean and install** 
+   ```sh
+   mvn clean install
+   ```
+4. **Build and run the Spring Boot app:**
    ```sh
    mvn spring-boot:run
    ```
@@ -46,11 +52,28 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Response:**
   ```json
-  { "token": "<JWT>", "user": { ... } }
+  { 
+    "token": "<JWT>", 
+    "user": { 
+      "userId": 123,
+      "userName": "example",
+      "userEmail": "user@example.com"
+    } 
+  }
   ```
-- **Error Codes:**
-  - `400 Bad Request`: Invalid email or password.
-  - `401 Unauthorized`: User is not registered or not verified.
+- **Error Responses:**
+  ```json
+  {
+    "status": 400,
+    "message": "User is not registered"
+  }
+  ```
+  ```json
+  {
+    "status": 401,
+    "message": "User is not verified."
+  }
+  ```
 - **Description:** Logs in a user and returns a JWT token.
 
 #### `POST /auth/register`
@@ -60,13 +83,28 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Response:**
   ```json
-  { "confirmationToken": "<token>" }
+  { "message": "SignUp successful! Please verify your email before logging in." }
   ```
-- **Error Codes:**
-  - `400 Bad Request`: Email already exists.
-- **Description:** Registers a new user and returns a confirmation token for email verification.
+- **Error Responses:**
+  ```json
+  {
+    "status": 400,
+    "message": "User already signed up. Please Login or verify your email if not done already."
+  }
+  ```
+  ```json
+  {
+    "status": 503,
+    "message": "Signup Failed! Please try again."
+  }
+  ```
+- **Description:** Registers a new user and sends a verification email.
 
 #### `POST /auth/logout`
+- **Response:**
+  ```json
+  "Logged out successfully"
+  ```
 - **Description:** Logs out the current user (stateless, but clears security context).
 
 #### `POST /auth/reset-password`
@@ -80,23 +118,54 @@ This project provides a backend for a URL shortener service. It supports user re
   ```json
   "Password reset successful"
   ```
-- **Error Codes:**
-  - `400 Bad Request`: Invalid request or password.
-  - `401 Unauthorized`: Invalid authentication.
+- **Error Responses:**
+  ```json
+  {
+    "status": 400,
+    "message": "Invalid Request. Please provide a valid password"
+  }
+  ```
+  ```json
+  {
+    "status": 401,
+    "message": "Invalid Authentication"
+  }
+  ```
 - **Description:** Allows authenticated users to reset their password.
 
 #### `POST /auth/forgot-password`
 - **Request:**
   ```json
-  { "userEmail": "user@example.com", "password": "newpassword" }
+  { 
+    "userEmail": "user@example.com", 
+    "password": "newpassword",
+    "confirmationToken": "token"
+  }
   ```
 - **Response:**
   ```json
   "Password reset successful"
   ```
-- **Error Codes:**
-  - `400 Bad Request`: Invalid email or password, User not found.
-- **Description:** Allows users to reset their password using their email address.
+- **Error Responses:**
+  ```json
+  {
+    "status": 400,
+    "message": "Invalid Request. Please provide a valid email address"
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User not found!"
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "Invalid operation"
+  }
+  ```
+- **Description:** Allows users to reset their password using their email address and confirmation token.
 
 #### `GET /auth/get-reset-token`
 - **Request:**
@@ -105,11 +174,34 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Response:**
   ```json
-  { "confirmationToken": "<token>", "isExistingToken": true/false }
+  { "alreadySent": true/false }
   ```
-- **Error Codes:**
-  - `400 Bad Request`: Invalid email, User not found, User logged in via OAuth2.
-- **Description:** Generates or retrieves a password reset token for a user.
+- **Error Responses:**
+  ```json
+  {
+    "status": 400,
+    "message": "Invalid Request. Please provide a valid email address"
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User not found!"
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User logged in via OAuth2. Trying using the third party application to login."
+  }
+  ```
+  ```json
+  {
+    "status": 503,
+    "message": "Password Reset Failed! Please try again."
+  }
+  ```
+- **Description:** Generates or retrieves a password reset token for a user and sends a reset email.
 
 #### `GET /auth/validate-reset-token`
 - **Request:**
@@ -118,11 +210,32 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Response:**
   ```json
-  { "email": "user@example.com", "isValid": true/false, "newToken": "<token>" }
+  { 
+    "email": "user@example.com", 
+    "tokenExpired": true/false, 
+    "confirmationToken": "<token>" 
+  }
   ```
-- **Error Codes:**
-  - `400 Bad Request`: Invalid token, User not found, User logged in via OAuth2.
-- **Description:** Validates a password reset token and optionally generates a new one.
+- **Error Responses:**
+  ```json
+  {
+    "status": 400,
+    "message": "Invalid Request."
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User not found!"
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User logged in via OAuth2. Trying using the third party application to login."
+  }
+  ```
+- **Description:** Validates a password reset token and returns token status.
 
 #### `GET /auth/validate-token`
 - **Request:**
@@ -131,11 +244,38 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Response:**
   ```json
-  { "email": "user@example.com", "isValid": true/false, "newToken": "<token>" }
+  { 
+    "email": "user@example.com", 
+    "tokenExpired": true/false, 
+    "confirmationToken": "<token>" 
+  }
   ```
-- **Error Codes:**
-  - `400 Bad Request`: Invalid token, User not found, User logged in via OAuth2, User already verified.
-- **Description:** Validates a user verification token and optionally generates a new one.
+- **Error Responses:**
+  ```json
+  {
+    "status": 400,
+    "message": "Invalid Request."
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User not found!"
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User logged in via OAuth2. Trying using the third party application to login."
+  }
+  ```
+  ```json
+  {
+    "status": 400,
+    "message": "User is already verified"
+  }
+  ```
+- **Description:** Validates a user verification token and returns token status.
 
 ---
 
@@ -162,15 +302,24 @@ This project provides a backend for a URL shortener service. It supports user re
   ```json
   {"shortUrl": "<shortUrl>"}
   ```
-- **Error Codes:**
-  - `401 Unauthorized`: Invalid authentication.
-  - `404 Not Found`: Short URL not found.
+- **Error Responses:**
+  ```json
+  {
+    "status": 401,
+    "message": "Invalid Authentication"
+  }
+  ```
 - **Description:** Creates a short URL for the authenticated user.
 
 #### `GET /{shortUrl}`
 - **Description:** Redirects to the original URL. No authentication required.
-- **Error Codes:**
-  - `404 Not Found`: Short URL not found.
+- **Error Responses:**
+  ```json
+  {
+    "status": 404,
+    "message": "Short URL not found"
+  }
+  ```
 
 ### User APIs
 
@@ -197,9 +346,19 @@ This project provides a backend for a URL shortener service. It supports user re
     "availableCredits": 5
   }
   ```
-- **Error Codes:**
-  - `401 Unauthorized`: Invalid authentication.
-  - `404 Not Found`: User not found.
+- **Error Responses:**
+  ```json
+  {
+    "status": 401,
+    "message": "Invalid Authentication"
+  }
+  ```
+  ```json
+  {
+    "status": 404,
+    "message": "User not found"
+  }
+  ```
 - **Description:** Returns the user's dashboard information including their profile, created URLs, and available credits.
 
 ---
@@ -213,9 +372,23 @@ This project provides a backend for a URL shortener service. It supports user re
 - CORS is enabled for `http://localhost:3000` by default (see `SecurityConfig.java`).
 - Update the allowed origins in `SecurityConfig` if your frontend runs elsewhere.
 
+## Email Configuration
+- The application uses SendGrid for sending emails
+- Configure the following in `application.properties`:
+  ```properties
+  spring.mail.host=smtp.sendgrid.net
+  spring.mail.port=465
+  spring.mail.username=apikey
+  spring.mail.password=${SENDGRID_API_KEY}
+  spring.mail.properties.mail.smtp.from=Cryptoutils <hello@cryptoutils.xyz>
+  ```
+- Set the `SENDGRID_API_KEY` environment variable with your SendGrid API key
+- Ensure the sender email is verified in your SendGrid account
+
 ## Notes
 - Update your database connection settings in `application.properties` as needed.
 - For OAuth2 login, see additional configuration in the backend (not covered here).
+- Make sure to verify your sender email address in SendGrid before sending emails.
 
 ---
 
