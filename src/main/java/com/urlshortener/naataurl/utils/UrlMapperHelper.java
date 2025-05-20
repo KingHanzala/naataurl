@@ -3,6 +3,7 @@ package com.urlshortener.naataurl.utils;
 import java.util.Date;
 
 import com.urlshortener.naataurl.persistence.model.User;
+import com.urlshortener.naataurl.response.UrlResponse;
 import com.urlshortener.naataurl.service.UserService;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -27,13 +28,14 @@ public class UrlMapperHelper {
     private @Autowired UserService userService;
     private @Autowired JwtUtils jwtUtil;
 
-    public String getShortUrl(String originalUrl, Long userId) throws Exception {
+    public UrlResponse getShortUrl(String originalUrl, Long userId) throws Exception {
         UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
-        if (urlMapper != null) {
-            return urlMapper.getShortUrl();
-        }
-
+        UrlResponse urlResponse = null;
         User user = userService.findByUserId(userId);
+        if (urlMapper != null) {
+            urlResponse = new UrlResponse(urlMapper.getShortUrl(), user.getUsageCredits());
+            return urlResponse;
+        }
         if (user == null) {
             logger.info("User not found");
             return null;
@@ -63,7 +65,7 @@ public class UrlMapperHelper {
             throw new RuntimeException(e);
         }
         userService.saveUser(user);
-        return shortUrl;
+        return new UrlResponse(shortUrl,user.getUsageCredits());
     }
 
     public String hashUrl(long id) {

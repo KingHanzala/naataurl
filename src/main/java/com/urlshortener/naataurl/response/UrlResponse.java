@@ -6,7 +6,11 @@ import lombok.Data;
 public class UrlResponse {
     private String shortUrl;
 
-    public UrlResponse(String shortUrl){
+    private Long availableCredits;
+
+    public UrlResponse(String shortUrl, Long availableCredits){
+
         this.shortUrl = shortUrl;
+        this.availableCredits = availableCredits;
     }
 }
