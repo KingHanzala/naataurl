@@ -1,5 +1,8 @@
 package com.urlshortener.naataurl.controller;
 
+import com.urlshortener.naataurl.request.LoginRequest;
+import com.urlshortener.naataurl.request.RegisterRequest;
+import com.urlshortener.naataurl.response.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,14 +43,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    loginRequest.getEmail(),
-                    loginRequest.getPassword()
-                )
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
             User user = userService.findByUserEmail(loginRequest.getEmail());
             if(user == null){
                 return ResponseEntity.badRequest().body("User is not registered");
@@ -56,7 +51,7 @@ public class AuthController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
-            response.put("user", user);
+            response.put("user", new UserResponse(user.getUserId(), user.getUserName(), user.getUserEmail()));
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -94,56 +89,5 @@ public class AuthController {
             new SecurityContextLogoutHandler().logout(request, response, auth);
         }
         return ResponseEntity.ok("Logged out successfully");
-    }
-}
-
-class LoginRequest {
-    private String email;
-    private String password;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-}
-
-class RegisterRequest {
-    private String username;
-    private String email;
-    private String password;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

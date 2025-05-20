@@ -11,7 +11,7 @@ import com.urlshortener.naataurl.persistence.model.UrlMapper;
 @Repository
 public interface UrlMapperRepository extends JpaRepository<UrlMapper, Long> {
     
-    UrlMapper findByOriginalUrl(String originalUrl);
+    UrlMapper findByOriginalUrlAndUserId(String originalUrl, Long userId);
     
     UrlMapper findByShortUrl(String shortUrl);
     

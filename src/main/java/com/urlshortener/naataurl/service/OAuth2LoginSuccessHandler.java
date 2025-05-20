@@ -50,10 +50,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             String token = jwtUtils.generateToken(user);
             log.info("Generated JWT token for user {}: {}", email, token);
             // Redirect to frontend with token
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"token\": \"" + token + "\"}");
-            response.getWriter().flush();
+            response.sendRedirect("http://localhost:3000/successCallback?token=" + token);
+
         } catch (Exception e) {
             log.error("Error during OAuth2 login success handling", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "OAuth2 login error");

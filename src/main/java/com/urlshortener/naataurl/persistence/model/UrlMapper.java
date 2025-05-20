@@ -37,68 +37,11 @@ public class UrlMapper{
     @Column(name = "deleted_at")
     private Date deletedAt;
 
-    public Long getUrlId() {
-        return urlId;
+    @Column(name = "url_clicks", nullable = false)
+    private Long urlClicks = 0L;
+
+    public void incrementClicks() {
+        this.urlClicks++;
     }
-    
-    public void setUrlId(Long urlId) {
-        this.urlId = urlId;
-    }
-    
-    public String getOriginalUrl() {
-        return originalUrl;
-    }
-    
-    public void setOriginalUrl(String originalUrl) {
-        this.originalUrl = originalUrl;
-    }
-    
-    public String getShortUrl() {
-        return shortUrl;
-    }
-    
-    public void setShortUrl(String shortUrl) {
-        this.shortUrl = shortUrl;
-    }
-    
-    public Long getUserId() {
-        return userId;
-    }
-    
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-    
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-    
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-    
-    public void setDeleted(boolean isDeleted) {
-        this.isDeleted = isDeleted;
-    }
-    
-    public Date getDeletedAt() {
-        return deletedAt;
-    }
-    
-    public void setDeletedAt(Date deletedAt) {
-        this.deletedAt = deletedAt;
-    }    
 
 }

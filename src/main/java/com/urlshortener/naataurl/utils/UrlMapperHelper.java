@@ -21,7 +21,11 @@ public class UrlMapperHelper {
     private static final Logger logger = LoggerFactory.getLogger(UrlMapperHelper.class);
     
     private static final String BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final long MAX_ID = 1_000_000_000L;
+
+    @Getter
     private @Autowired UrlService urlService;
+    private @Autowired UserService userService;
     private @Autowired JwtUtils jwtUtil;
 
     public UrlResponse getShortUrl(String originalUrl, Long userId) throws Exception {
@@ -42,7 +46,12 @@ public class UrlMapperHelper {
         }
 
         Long urlId = urlService.getNextUrlId();
-        String shortUrl = hashUrl(urlId);
+        String shortUrl = null;
+        try {
+            shortUrl = hashUrl(urlId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e);
+        }
         urlMapper = new UrlMapper();
         urlMapper.setUrlId(urlId);
         urlMapper.setUserId(userId);
@@ -59,13 +68,25 @@ public class UrlMapperHelper {
         return new UrlResponse(shortUrl,user.getUsageCredits());
     }
 
-    public String hashUrl(Long value){
-        StringBuilder sb = new StringBuilder();
-        while (value > 0) {
-            sb.append(BASE62.charAt((int) (value % 62)));
-            value /= 62;
+    public String hashUrl(long id) {
+        if (id < 0 || id > MAX_ID) {
+            throw new IllegalArgumentException("ID must be between 0 and " + MAX_ID);
         }
-        return sb.reverse().toString();
+
+        long reversed = MAX_ID - id;
+
+        if (reversed == 0) {
+            return String.valueOf(BASE62.charAt(0));
+        }
+
+        StringBuilder sb = new StringBuilder();
+        while (reversed > 0) {
+            int remainder = (int) (reversed % 62);
+            sb.insert(0, BASE62.charAt(remainder));
+            reversed /= 62;
+        }
+
+        return sb.toString();
     }
 
     public Long getUserIdFromAuthentication(Authentication authentication) {

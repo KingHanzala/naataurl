@@ -1,5 +1,8 @@
 package com.urlshortener.naataurl.controller;
 
+import com.urlshortener.naataurl.request.UrlRequest;
+import com.urlshortener.naataurl.response.UrlResponse;
+import com.urlshortener.naataurl.service.UrlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.urlshortener.naataurl.response.ExceptionResponse;
 import com.urlshortener.naataurl.utils.UrlMapperHelper;
 import com.urlshortener.naataurl.persistence.model.UrlMapper;
 
@@ -18,16 +22,18 @@ public class UrlController {
 
     private @Autowired UrlMapperHelper urlMapperHelper;
 
+    private @Autowired UrlService urlService;
+
     @PostMapping("/api/create-url")
-    public ResponseEntity<?> createShortUrl(@RequestBody UrlRequest request, Authentication authentication){
+    public ResponseEntity<?> createShortUrl(@RequestBody UrlRequest request, Authentication authentication) {
         Long userId = null;
-        try{
+        try {
             userId = urlMapperHelper.getUserIdFromAuthentication(authentication);
-        } catch(Exception e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authentication");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Authentication"));
         }
-        if(userId==null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authentication");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Authentication"));
         }
         UrlResponse urlResponse = null;
         try {
@@ -45,24 +51,14 @@ public class UrlController {
 
     @GetMapping("/{shortUrl}")
     public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl){
-        UrlMapper urlMapper = urlMapperHelper.getUrlService().findByShortUrl(shortUrl);
-        if(urlMapper == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
+        UrlMapper urlMapper = urlService.findByShortUrl(shortUrl);
+        if(urlMapper == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ExceptionResponse(HttpStatus.NOT_FOUND.value(), "Short Url Not Found"));
         }
+        urlMapper.incrementClicks();
+        urlService.saveUrlMapper(urlMapper);
         return ResponseEntity.status(HttpStatus.FOUND)
             .header("Location", urlMapper.getOriginalUrl())
             .build();
-    }
-}
-
-class UrlRequest {
-    private String longUrl;
-
-    public String getLongUrl() {
-        return longUrl;
-    }
-
-    public void setLongUrl(String longUrl) {
-        this.longUrl = longUrl;
     }
 }
