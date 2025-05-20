@@ -50,7 +50,7 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Error Codes:**
   - `400 Bad Request`: Invalid email or password.
-  - `401 Unauthorized`: User is not registered.
+  - `401 Unauthorized`: User is not registered or not verified.
 - **Description:** Logs in a user and returns a JWT token.
 
 #### `POST /auth/register`
@@ -60,14 +60,82 @@ This project provides a backend for a URL shortener service. It supports user re
   ```
 - **Response:**
   ```json
-  { "token": "<JWT>", "user": { ... } }
+  { "confirmationToken": "<token>" }
   ```
 - **Error Codes:**
   - `400 Bad Request`: Email already exists.
-- **Description:** Registers a new user and returns a JWT token.
+- **Description:** Registers a new user and returns a confirmation token for email verification.
 
 #### `POST /auth/logout`
 - **Description:** Logs out the current user (stateless, but clears security context).
+
+#### `POST /auth/reset-password`
+- **Headers:**
+  - `Authorization: Bearer <JWT>`
+- **Request:**
+  ```json
+  { "password": "newpassword" }
+  ```
+- **Response:**
+  ```json
+  "Password reset successful"
+  ```
+- **Error Codes:**
+  - `400 Bad Request`: Invalid request or password.
+  - `401 Unauthorized`: Invalid authentication.
+- **Description:** Allows authenticated users to reset their password.
+
+#### `POST /auth/forgot-password`
+- **Request:**
+  ```json
+  { "userEmail": "user@example.com", "password": "newpassword" }
+  ```
+- **Response:**
+  ```json
+  "Password reset successful"
+  ```
+- **Error Codes:**
+  - `400 Bad Request`: Invalid email or password, User not found.
+- **Description:** Allows users to reset their password using their email address.
+
+#### `GET /auth/get-reset-token`
+- **Request:**
+  ```json
+  { "email": "user@example.com" }
+  ```
+- **Response:**
+  ```json
+  { "confirmationToken": "<token>", "isExistingToken": true/false }
+  ```
+- **Error Codes:**
+  - `400 Bad Request`: Invalid email, User not found, User logged in via OAuth2.
+- **Description:** Generates or retrieves a password reset token for a user.
+
+#### `GET /auth/validate-reset-token`
+- **Request:**
+  ```json
+  { "confirmationToken": "<token>" }
+  ```
+- **Response:**
+  ```json
+  { "email": "user@example.com", "isValid": true/false, "newToken": "<token>" }
+  ```
+- **Error Codes:**
+  - `400 Bad Request`: Invalid token, User not found, User logged in via OAuth2.
+- **Description:** Validates a password reset token and optionally generates a new one.
+
+#### `GET /auth/validate-token`
+- **Request:**
+  ```json
+  { "confirmationToken": "<token>" }
+  ```
+- **Response:**
+  ```json
+  { "email": "user@example.com", "isValid": true/false, "newToken": "<token>" }
+  ```
+- **Error Codes:**
+  - `400 Bad Request`: Invalid token, User not found, User logged in via OAuth2, User already verified.
+- **Description:** Validates a user verification token and optionally generates a new one.
 
 ---
 

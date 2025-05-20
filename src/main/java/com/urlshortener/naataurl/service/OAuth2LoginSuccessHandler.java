@@ -5,6 +5,7 @@ import com.urlshortener.naataurl.utils.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -26,6 +27,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
     private @Autowired PasswordEncoder passwordEncoder;
 
     @Override
@@ -42,6 +46,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user.setUserEmail(email);
                 user.setUserPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
                 user.setCreatedAt(new Date());
+                user.setOauth2Login(true);
+                user.setVerified(true);
                 userService.saveUser(user);
                 log.info("Created new user: {} ({})", name, email);
             } else {
@@ -50,7 +56,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             String token = jwtUtils.generateToken(user);
             log.info("Generated JWT token for user {}: {}", email, token);
             // Redirect to frontend with token
-            response.sendRedirect("http://localhost:3000/successCallback?token=" + token);
+            response.sendRedirect(frontendUrl + "/successCallback?token=" + token);
 
         } catch (Exception e) {
             log.error("Error during OAuth2 login success handling", e);

@@ -72,12 +72,6 @@ public class SecurityConfig {
                 )
                 .successHandler(oAuth2LoginSuccessHandler())
             )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/auth/login")
-                .defaultSuccessUrl("/dashboard")
-                .permitAll()
-            )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             );

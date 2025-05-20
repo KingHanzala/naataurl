@@ -1,9 +1,12 @@
 package com.urlshortener.naataurl.controller;
 
-import com.urlshortener.naataurl.request.LoginRequest;
-import com.urlshortener.naataurl.request.RegisterRequest;
-import com.urlshortener.naataurl.response.UserResponse;
+import com.urlshortener.naataurl.request.*;
+import com.urlshortener.naataurl.response.*;
+import com.urlshortener.naataurl.utils.UrlMapperHelper;
+import com.urlshortener.naataurl.utils.UserHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,8 +22,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -35,6 +36,10 @@ public class AuthController {
     @Autowired
     private JwtUtils jwtUtils;
 
+    private @Autowired UrlMapperHelper urlMapperHelper;
+
+    private @Autowired UserHelper userHelper;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
@@ -42,13 +47,13 @@ public class AuthController {
             if(user == null){
                 return ResponseEntity.badRequest().body("User is not registered");
             }
+            if(!user.isVerified()){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "User is not verified."));
+            }
             String token = jwtUtils.generateToken(user);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("user", new UserResponse(user.getUserId(), user.getUserName(), user.getUserEmail()));
+            LoginResponse loginResponse = new LoginResponse(token, new UserResponse(user.getUserId(), user.getUserName(), user.getUserEmail()));
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(loginResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Invalid email or password");
         }
@@ -65,16 +70,12 @@ public class AuthController {
         user.setUserEmail(registerRequest.getEmail());
         user.setUserPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setCreatedAt(new Date());
-        
         userService.saveUser(user);
-        
-        // Generate token for immediate login
-        String token = jwtUtils.generateToken(user);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        
-        return ResponseEntity.ok(response);
+
+        String confirmationToken = userHelper.generateAndSetUserToken(user);
+
+        RegisterResponse registerResponse = new RegisterResponse(confirmationToken);
+        return ResponseEntity.ok(registerResponse);
     }
 
     @PostMapping("/logout")
@@ -84,5 +85,139 @@ public class AuthController {
             new SecurityContextLogoutHandler().logout(request, response, auth);
         }
         return ResponseEntity.ok("Logged out successfully");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest, Authentication authentication) {
+        try {
+            Long userId = null;
+            try {
+                userId = urlMapperHelper.getUserIdFromAuthentication(authentication);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Authentication"));
+            }
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Authentication"));
+            }
+            String newPassword = resetPasswordRequest.getPassword();
+            if(StringHelper.isEmpty(newPassword)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request. Please provide a valid password"));
+            }
+            User user = userService.findByUserId(userId);
+            user.setUserPassword(passwordEncoder.encode(newPassword));
+            userService.saveUser(user);
+            return ResponseEntity.ok("Password reset successful");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
+        }
+    }
+
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        try {
+            String userEmail = forgotPasswordRequest.getUserEmail();
+            String newPassword = forgotPasswordRequest.getPassword();
+            if(StringHelper.isEmpty(userEmail)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request. Please provide a valid email address"));
+            }
+            User user = userService.findByUserEmail(userEmail);
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User not found!"));
+            }
+            if(StringHelper.isEmpty(newPassword)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request. Please provide a valid password"));
+            }
+            user.setUserPassword(passwordEncoder.encode(newPassword));
+            userService.saveUser(user);
+            return ResponseEntity.ok("Password reset successful");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
+        }
+    }
+
+    @GetMapping("/get-reset-token")
+    public ResponseEntity<?> getResetToken(@RequestBody GetResetTokenRequest getResetTokenRequest) {
+        try {
+            GetResetTokenResponse getResetTokenResponse = null;
+            String userEmail = getResetTokenRequest.getEmail();
+            if(StringHelper.isEmpty(userEmail)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request. Please provide a valid email address"));
+            }
+            User user = userService.findByUserEmail(userEmail);
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User not found!"));
+            }
+            if(user.isOauth2Login()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User logged in via OAuth2. Trying using the third party application to login."));
+            }
+            String existingToken = user.getConfirmationToken();
+            if(existingToken != null){
+                getResetTokenResponse = new GetResetTokenResponse(existingToken, true);
+                return ResponseEntity.ok(getResetTokenResponse);
+            }
+            String confirmationToken = userHelper.generateAndSetUserToken(user);
+            getResetTokenResponse = new GetResetTokenResponse(confirmationToken, false);
+            return ResponseEntity.ok(getResetTokenResponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
+        }
+    }
+
+    @GetMapping("/validate-reset-token")
+    public ResponseEntity<?> validateResetToken(@RequestBody ValidateTokenRequest validateTokenRequest) {
+        try {
+            ValidateTokenResponse validateTokenResponse = null;
+            String token = validateTokenRequest.getConfirmationToken();
+            if(StringHelper.isEmpty(token)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request."));
+            }
+            User user = userService.findByConfirmationToken(token);
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User not found!"));
+            }
+            if(user.isOauth2Login()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User logged in via OAuth2. Trying using the third party application to login."));
+            }
+            String newTokenGenerated = userHelper.validateResetToken(user);
+            if(newTokenGenerated != null){
+                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), true, newTokenGenerated);
+            } else {
+                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), false, null);
+            }
+            return ResponseEntity.ok(validateTokenResponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
+        }
+    }
+
+    @GetMapping("/validate-token")
+    public ResponseEntity<?> validateToken(@RequestBody ValidateTokenRequest validateTokenRequest) {
+        try {
+            ValidateTokenResponse validateTokenResponse = null;
+            String token = validateTokenRequest.getConfirmationToken();
+            if(StringHelper.isEmpty(token)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request."));
+            }
+            User user = userService.findByConfirmationToken(token);
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User not found!"));
+            }
+            if(user.isOauth2Login()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User logged in via OAuth2. Trying using the third party application to login."));
+            }
+            if(user.isVerified()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User is already verified"));
+            }
+            String newTokenGenerated = userHelper.validateResetToken(user);
+            if(newTokenGenerated != null){
+                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), true, newTokenGenerated);
+            } else {
+                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), false, null);
+            }
+            return ResponseEntity.ok(validateTokenResponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
+        }
     }
 }

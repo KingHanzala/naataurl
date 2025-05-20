@@ -12,21 +12,22 @@ public class UserService {
     private @Autowired UserRepository userRepository;
     
     public User findByUserName(String username) {
-        User user = userRepository.findByUserName(username);
-        return user;
+        return userRepository.findByUserName(username);
     }
 
     public User findByUserId(Long id) {
-        User user = userRepository.findByUserId(id);
-        return user;
+        return userRepository.findByUserId(id);
     }
     public User findByUserEmail(String email) {
-        User user = userRepository.findByUserEmail(email);
-        return user;
+        return userRepository.findByUserEmail(email);
     }
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    public User findByConfirmationToken(String confirmationToken){
+        return userRepository.findByConfirmationToken(confirmationToken);
+    }
+
+    public void saveUser(User user) {
+        userRepository.save(user);
     }
 
 }

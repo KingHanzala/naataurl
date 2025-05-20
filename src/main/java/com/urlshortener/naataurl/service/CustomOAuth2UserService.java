@@ -114,6 +114,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user.setUserEmail(email);
             user.setUserPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             user.setCreatedAt(new Date());
+            user.setOauth2Login(true);
+            user.setVerified(true);
             userService.saveUser(user);
             log.info("Created new user: {} ({})", username, email);
         } else {

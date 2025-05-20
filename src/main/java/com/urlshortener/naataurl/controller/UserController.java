@@ -1,32 +1,32 @@
 package com.urlshortener.naataurl.controller;
 
+
+import com.urlshortener.naataurl.response.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import com.urlshortener.naataurl.response.ExceptionResponse;
-import com.urlshortener.naataurl.response.GetUserDashboardResponse;
 import com.urlshortener.naataurl.utils.UrlMapperHelper;
 import com.urlshortener.naataurl.service.UserService;
 import com.urlshortener.naataurl.service.UrlService;
 import com.urlshortener.naataurl.persistence.model.User;
-import com.urlshortener.naataurl.response.UserResponse;
-import com.urlshortener.naataurl.response.GetUrlInfoResponse;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/api")
 public class UserController {
 
     private @Autowired UrlMapperHelper urlMapperHelper;
     private @Autowired UserService userService;
     private @Autowired UrlService urlService;
 
-    @GetMapping("/api/dashboard")
+    @GetMapping("/dashboard")
     ResponseEntity<?> getUserDashboard(Authentication authentication) {
         Long userId = null;
         try {

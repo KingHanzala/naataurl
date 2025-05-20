@@ -45,6 +45,18 @@ public class User {
     @Column(name = "usage_credits", nullable = false)
     private Long usageCredits = 5L;
 
+    @Column(name = "confirmation_token")
+    private String confirmationToken;
+
+    @Column(name = "token_expiry")
+    private Date tokenExpiry;
+
+    @Column(name = "oauth2_login")
+    private boolean oauth2Login;
+
+    @Column(name = "verified")
+    private boolean verified;
+
     public void decrementCredits(){
         this.usageCredits --;
     }
