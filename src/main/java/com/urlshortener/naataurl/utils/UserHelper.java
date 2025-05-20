@@ -26,13 +26,13 @@ public class UserHelper {
         user.setConfirmationToken(token);
         Instant expiryInstant = Instant.now().plus(48, ChronoUnit.HOURS);
         user.setTokenExpiry(Date.from(expiryInstant));
-        userService.saveUser(user);
     }
 
     public boolean validateResetToken(User user){
         if(user.getTokenExpiry()!=null && user.getTokenExpiry().before(new Date())) {
             logger.info("Password Reset Token expired for user {}", user.getUserEmail());
             generateAndSetUserToken(user);
+            userService.saveUser(user);
             return true;
         }
         //Signup Flow

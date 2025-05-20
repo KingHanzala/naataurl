@@ -62,7 +62,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
         if (userService.findByUserEmail(registerRequest.getEmail()) != null) {
-            return ResponseEntity.badRequest().body("Email already exists");
+            return ResponseEntity.badRequest().body("User already signed up. Please Login or verify your email if not done already.");
         }
 
         User user = new User();
@@ -71,6 +71,12 @@ public class AuthController {
         user.setUserPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setCreatedAt(new Date());
         userHelper.generateAndSetUserToken(user);
+        try{
+            userService.sendSignupVerificationEmail(user);
+        } catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Signup Failed! Please try again.");
+        }
+        userService.saveUser(user);
 
         RegisterResponse registerResponse = new RegisterResponse("SignUp successful! Please verify your email before logging in.");
         return ResponseEntity.ok(registerResponse);
@@ -160,6 +166,12 @@ public class AuthController {
                 return ResponseEntity.ok(getResetTokenResponse);
             }
             userHelper.generateAndSetUserToken(user);
+            try{
+                userService.sendForgotPasswordVerificationEmail(user);
+            } catch (RuntimeException e){
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Password Reset Failed! Please try again.");
+            }
+            userService.saveUser(user);
             getResetTokenResponse = new GetResetTokenResponse(false);
             return ResponseEntity.ok(getResetTokenResponse);
         } catch (Exception e) {
