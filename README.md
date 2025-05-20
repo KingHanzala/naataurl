@@ -134,36 +134,6 @@ This project provides a backend for a URL shortener service. It supports user re
   - `404 Not Found`: User not found.
 - **Description:** Returns the user's dashboard information including their profile, created URLs, and available credits.
 
-### User APIs
-
-#### `GET /api/dashboard`
-- **Headers:**
-  - `Authorization: Bearer <JWT>`
-- **Response:**
-  ```json
-  {
-    "userResponse": {
-      "userId": 123,
-      "userName": "example",
-      "email": "user@example.com"
-    },
-    "urlsMappedList": [
-      {
-        "originalUrl": "https://example.com/long/url",
-        "shortUrl": "abc123",
-        "urlClicks": 42,
-        "createdDtm": "2024-03-19T12:34:56",
-        "userId": 123
-      }
-    ],
-    "availableCredits": 5
-  }
-  ```
-- **Error Codes:**
-  - `401 Unauthorized`: Invalid authentication.
-  - `404 Not Found`: User not found.
-- **Description:** Returns the user's dashboard information including their profile, created URLs, and available credits.
-
 ---
 
 ## Authentication
