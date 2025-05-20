@@ -23,6 +23,7 @@ public class EmailService {
     private static final String EMAIL_TEMPLATE_PATH = "templates/email/email-template.html";
     private static final String FORGOT_PASSWORD_CONTENT_PATH = "templates/email/content/forgot-password.html";
     private static final String SIGNUP_VERIFICATION_CONTENT_PATH = "templates/email/content/signup-verification.html";
+    private static final String LOGO_PATH = "static/images/logo.png";
 
     @Value("${spring.mail.properties.mail.smtp.from}")
     private String fromEmail;
@@ -52,7 +53,7 @@ public class EmailService {
         logger.debug("Attempting to send forgot password email to: {}", to);
         try {
             String content = loadContent(FORGOT_PASSWORD_CONTENT_PATH).replace("${url}", url);
-            sendHtmlEmail(to, "Reset Your Password - NaataURL", content);
+            sendHtmlEmail(to, "Reset Your Password - Cryptoutils", content);
             logger.info("Successfully sent forgot password email to: {}", to);
         } catch (IOException e) {
             logger.error("Failed to load forgot password email content. Error: {}", e.getMessage(), e);
@@ -67,7 +68,7 @@ public class EmailService {
         logger.debug("Attempting to send signup verification email to: {}", to);
         try {
             String content = loadContent(SIGNUP_VERIFICATION_CONTENT_PATH).replace("${url}", url);
-            sendHtmlEmail(to, "Verify Your Email - NaataURL", content);
+            sendHtmlEmail(to, "Verify Your Email - Cryptoutils", content);
             logger.info("Successfully sent signup verification email to: {}", to);
         } catch (IOException e) {
             logger.error("Failed to load signup verification email content. Error: {}", e.getMessage(), e);
@@ -94,6 +95,14 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
+
+            // Add logo as embedded image
+            ClassPathResource logoResource = new ClassPathResource(LOGO_PATH);
+            if (logoResource.exists()) {
+                helper.addInline("logo", logoResource);
+            } else {
+                logger.warn("Logo image not found at path: {}", LOGO_PATH);
+            }
 
             mailSender.send(message);
             logger.info("Successfully sent HTML email to: {}", to);
