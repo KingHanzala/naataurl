@@ -6,11 +6,11 @@ import lombok.Data;
 public class ValidateTokenResponse {
     String userEmail;
     boolean tokenExpired;
-    String newConfirmationToken;
+    String confirmationToken;
 
-    public ValidateTokenResponse(String userEmail, boolean tokenExpired, String newConfirmationToken) {
+    public ValidateTokenResponse(String userEmail, boolean tokenExpired, String confirmationToken) {
         this.userEmail = userEmail;
         this.tokenExpired = tokenExpired;
-        this.newConfirmationToken = newConfirmationToken;
+        this.confirmationToken = confirmationToken;
     }
 }

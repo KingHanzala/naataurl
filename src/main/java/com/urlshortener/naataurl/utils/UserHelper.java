@@ -21,26 +21,31 @@ public class UserHelper {
         return UUID.randomUUID().toString();
     }
 
-    public String generateAndSetUserToken(User user){
+    public void generateAndSetUserToken(User user){
         String token = generateRandomToken();
         user.setConfirmationToken(token);
         Instant expiryInstant = Instant.now().plus(48, ChronoUnit.HOURS);
         user.setTokenExpiry(Date.from(expiryInstant));
         userService.saveUser(user);
-        return token;
     }
 
-    public String validateResetToken(User user){
-        if(user.getTokenExpiry()!=null && user.getTokenExpiry().before(new Date())){
-            logger.info("Password Reset Token expired for user {}",user.getUserEmail());
-            return generateAndSetUserToken(user);
+    public boolean validateResetToken(User user){
+        if(user.getTokenExpiry()!=null && user.getTokenExpiry().before(new Date())) {
+            logger.info("Password Reset Token expired for user {}", user.getUserEmail());
+            generateAndSetUserToken(user);
+            return true;
         }
-        user.setConfirmationToken(null);
-        user.setTokenExpiry(null);
+        //Signup Flow
         if(!user.isVerified()){
+            resetConfirmationTokenDtls(user);
             user.setVerified(true);
         }
         userService.saveUser(user);
-        return null;
+        return false;
+    }
+
+    public void resetConfirmationTokenDtls(User user){
+        user.setConfirmationToken(null);
+        user.setTokenExpiry(null);
     }
 }

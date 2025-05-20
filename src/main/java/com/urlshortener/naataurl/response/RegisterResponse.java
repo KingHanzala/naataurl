@@ -5,10 +5,10 @@ import lombok.Data;
 @Data
 public class RegisterResponse {
 
-    String confirmationToken;
+    String message;
 
-    public RegisterResponse(String confirmationToken) {
-        this.confirmationToken = confirmationToken;
+    public RegisterResponse(String message) {
+        this.message = message;
 
     }
 }

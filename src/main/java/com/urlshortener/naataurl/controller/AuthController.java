@@ -70,11 +70,9 @@ public class AuthController {
         user.setUserEmail(registerRequest.getEmail());
         user.setUserPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setCreatedAt(new Date());
-        userService.saveUser(user);
+        userHelper.generateAndSetUserToken(user);
 
-        String confirmationToken = userHelper.generateAndSetUserToken(user);
-
-        RegisterResponse registerResponse = new RegisterResponse(confirmationToken);
+        RegisterResponse registerResponse = new RegisterResponse("SignUp successful! Please verify your email before logging in.");
         return ResponseEntity.ok(registerResponse);
     }
 
@@ -118,6 +116,7 @@ public class AuthController {
         try {
             String userEmail = forgotPasswordRequest.getUserEmail();
             String newPassword = forgotPasswordRequest.getPassword();
+            String confirmationToken = forgotPasswordRequest.getConfirmationToken();
             if(StringHelper.isEmpty(userEmail)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request. Please provide a valid email address"));
             }
@@ -128,6 +127,10 @@ public class AuthController {
             if(StringHelper.isEmpty(newPassword)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid Request. Please provide a valid password"));
             }
+            if(confirmationToken==null || !confirmationToken.equals(user.getConfirmationToken())){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "Invalid operation"));
+            }
+            userHelper.resetConfirmationTokenDtls(user);
             user.setUserPassword(passwordEncoder.encode(newPassword));
             userService.saveUser(user);
             return ResponseEntity.ok("Password reset successful");
@@ -153,11 +156,11 @@ public class AuthController {
             }
             String existingToken = user.getConfirmationToken();
             if(existingToken != null){
-                getResetTokenResponse = new GetResetTokenResponse(existingToken, true);
+                getResetTokenResponse = new GetResetTokenResponse(true);
                 return ResponseEntity.ok(getResetTokenResponse);
             }
-            String confirmationToken = userHelper.generateAndSetUserToken(user);
-            getResetTokenResponse = new GetResetTokenResponse(confirmationToken, false);
+            userHelper.generateAndSetUserToken(user);
+            getResetTokenResponse = new GetResetTokenResponse(false);
             return ResponseEntity.ok(getResetTokenResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Invalid email or password");
@@ -179,12 +182,9 @@ public class AuthController {
             if(user.isOauth2Login()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User logged in via OAuth2. Trying using the third party application to login."));
             }
-            String newTokenGenerated = userHelper.validateResetToken(user);
-            if(newTokenGenerated != null){
-                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), true, newTokenGenerated);
-            } else {
-                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), false, null);
-            }
+            boolean tokenExpired = userHelper.validateResetToken(user);
+            validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), tokenExpired, user.getConfirmationToken());
+
             return ResponseEntity.ok(validateTokenResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Invalid email or password");
@@ -209,12 +209,9 @@ public class AuthController {
             if(user.isVerified()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "User is already verified"));
             }
-            String newTokenGenerated = userHelper.validateResetToken(user);
-            if(newTokenGenerated != null){
-                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), true, newTokenGenerated);
-            } else {
-                validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), false, null);
-            }
+            boolean tokenExpired = userHelper.validateResetToken(user);
+            validateTokenResponse = new ValidateTokenResponse(user.getUserEmail(), tokenExpired, user.getConfirmationToken());
+
             return ResponseEntity.ok(validateTokenResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Invalid email or password");
