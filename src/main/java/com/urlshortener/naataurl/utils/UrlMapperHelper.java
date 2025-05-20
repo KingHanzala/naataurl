@@ -2,6 +2,10 @@ package com.urlshortener.naataurl.utils;
 
 import java.util.Date;
 
+import com.urlshortener.naataurl.persistence.model.User;
+import com.urlshortener.naataurl.response.UrlResponse;
+import com.urlshortener.naataurl.service.UserService;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,16 +23,24 @@ public class UrlMapperHelper {
     private static final String BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private @Autowired UrlService urlService;
     private @Autowired JwtUtils jwtUtil;
-    
-    public UrlService getUrlService() {
-        return urlService;
-    }
-    
-    public String getShortUrl(String originalUrl, Long userId){
-        UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl);
-        if(urlMapper != null){
-            return urlMapper.getShortUrl();
+
+    public UrlResponse getShortUrl(String originalUrl, Long userId) throws Exception {
+        UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
+        UrlResponse urlResponse = null;
+        User user = userService.findByUserId(userId);
+        if (urlMapper != null) {
+            urlResponse = new UrlResponse(urlMapper.getShortUrl(), user.getUsageCredits());
+            return urlResponse;
         }
+        if (user == null) {
+            logger.info("User not found");
+            return null;
+        } else if (user.getUsageCredits() == 0) {
+            throw new Exception();
+        } else {
+            user.decrementCredits();
+        }
+
         Long urlId = urlService.getNextUrlId();
         String shortUrl = hashUrl(urlId);
         urlMapper = new UrlMapper();
@@ -37,8 +49,14 @@ public class UrlMapperHelper {
         urlMapper.setOriginalUrl(originalUrl);
         urlMapper.setShortUrl(shortUrl);
         urlMapper.setCreatedAt(new Date());
-        urlService.saveUrlMapper(urlMapper);
-        return shortUrl;
+        try {
+            urlService.saveUrlMapper(urlMapper);
+        } catch (Exception e) {
+            user.incrementCredits();
+            throw new RuntimeException(e);
+        }
+        userService.saveUser(user);
+        return new UrlResponse(shortUrl,user.getUsageCredits());
     }
 
     public String hashUrl(Long value){

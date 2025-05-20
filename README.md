@@ -10,6 +10,7 @@ A Spring Boot-based URL shortener backend with JWT authentication and Redis cach
   - [Auth APIs](#auth-apis-auth)
   - [OAuth2 APIs](#oauth2-apis)
   - [URL Shortener APIs](#url-shortener-apis)
+  - [User APIs](#user-apis)
 - [Authentication](#authentication)
 - [CORS & Frontend Integration](#cors--frontend-integration)
 - [Docker/Redis](#dockerredis)
@@ -94,6 +95,36 @@ This project provides a backend for a URL shortener service. It supports user re
 
 #### `GET /{shortUrl}`
 - **Description:** Redirects to the original URL. No authentication required.
+
+### User APIs
+
+#### `GET /api/dashboard`
+- **Headers:**
+  - `Authorization: Bearer <JWT>`
+- **Response:**
+  ```json
+  {
+    "userResponse": {
+      "userId": 123,
+      "userName": "example",
+      "email": "user@example.com"
+    },
+    "urlsMappedList": [
+      {
+        "originalUrl": "https://example.com/long/url",
+        "shortUrl": "abc123",
+        "urlClicks": 42,
+        "createdDtm": "2024-03-19T12:34:56",
+        "userId": 123
+      }
+    ],
+    "availableCredits": 5
+  }
+  ```
+- **Error Codes:**
+  - `401 Unauthorized`: Invalid authentication.
+  - `404 Not Found`: User not found.
+- **Description:** Returns the user's dashboard information including their profile, created URLs, and available credits.
 
 ---
 

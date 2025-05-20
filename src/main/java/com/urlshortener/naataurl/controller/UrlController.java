@@ -29,11 +29,18 @@ public class UrlController {
         if(userId==null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authentication");
         }
-        String shortUrl = urlMapperHelper.getShortUrl(request.getLongUrl(), userId);
-        if(shortUrl == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short Url Not found");
+        UrlResponse urlResponse = null;
+        try {
+            urlResponse = urlMapperHelper.getShortUrl(request.getLongUrl(), userId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ExceptionResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), "Service unavailable"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ExceptionResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), "Usage Credits Limit Exhausted"));
         }
-        return ResponseEntity.status(HttpStatus.OK).body(shortUrl);
+        if (urlResponse == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ExceptionResponse(HttpStatus.NOT_FOUND.value(), "Invalid Authentication"));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(urlResponse);
     }
 
     @GetMapping("/{shortUrl}")
