@@ -21,3 +21,4 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - POSTGRES_DB=${POSTGRES_DB}
       - PORT=${PORT}
+      - MAIL_PORT=${MAIL_PORT}
