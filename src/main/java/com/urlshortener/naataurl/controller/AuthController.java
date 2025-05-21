@@ -44,8 +44,13 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             User user = userService.findByUserEmail(loginRequest.getEmail());
+            String password = loginRequest.getPassword();
             if(user == null){
                 return ResponseEntity.badRequest().body("User is not registered");
+            }
+            if (StringHelper.isEmpty(password) || !passwordEncoder.matches(password, user.getUserPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Password"));
             }
             if(!user.isVerified()){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "User is not verified."));

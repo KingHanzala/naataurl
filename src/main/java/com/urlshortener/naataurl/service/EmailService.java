@@ -30,6 +30,7 @@ public class EmailService {
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
+        logger.info("EmailService initialized with fromEmail: {}", fromEmail);
     }
 
     public void sendVerificationEmail(String to, String subject, String body) throws MessagingException {
@@ -41,6 +42,7 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(body, true);
+            logger.debug("Sending email with subject: {} to: {}", subject, to);
             mailSender.send(message);
             logger.info("Successfully sent verification email to: {}", to);
         } catch (Exception e) {
@@ -100,10 +102,12 @@ public class EmailService {
             ClassPathResource logoResource = new ClassPathResource(LOGO_PATH);
             if (logoResource.exists()) {
                 helper.addInline("logo", logoResource);
+                logger.debug("Added logo to email");
             } else {
                 logger.warn("Logo image not found at path: {}", LOGO_PATH);
             }
 
+            logger.debug("Sending HTML email with subject: {} to: {}", subject, to);
             mailSender.send(message);
             logger.info("Successfully sent HTML email to: {}", to);
         } catch (IOException e) {
@@ -116,16 +120,22 @@ public class EmailService {
     }
 
     private String loadTemplate() throws IOException {
+        logger.debug("Loading email template from: {}", EMAIL_TEMPLATE_PATH);
         ClassPathResource resource = new ClassPathResource(EMAIL_TEMPLATE_PATH);
         try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
-            return FileCopyUtils.copyToString(reader);
+            String template = FileCopyUtils.copyToString(reader);
+            logger.debug("Successfully loaded email template");
+            return template;
         }
     }
 
     private String loadContent(String path) throws IOException {
+        logger.debug("Loading email content from: {}", path);
         ClassPathResource resource = new ClassPathResource(path);
         try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
-            return FileCopyUtils.copyToString(reader);
+            String content = FileCopyUtils.copyToString(reader);
+            logger.debug("Successfully loaded email content");
+            return content;
         }
     }
 }
