@@ -17,10 +17,10 @@ RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 # Expose the application port
-EXPOSE 8080
+EXPOSE ${PORT:-8080}
 
 # Set environment variables
-ENV JAVA_OPTS="-Xms512m -Xmx512m"
+ENV JAVA_OPTS="-Xms512m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"] 
