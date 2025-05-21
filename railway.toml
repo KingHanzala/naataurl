@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "java -Xms512m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar app.jar"
+startCommand = "java -Xms1g -Xmx1g -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar app.jar"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 healthcheckPath = "/actuator/health"
