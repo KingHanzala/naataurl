@@ -8,14 +8,4 @@ services:
     env_file:
       - .env
     environment:
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=true
       - SPRING_PROFILES_ACTIVE=prod
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - naataurl-network
-
-networks:
-  naataurl-network:
-    driver: bridge 
