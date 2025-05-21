@@ -40,7 +40,7 @@ public class UserService {
 
     public void sendSignupVerificationEmail(User user) throws RuntimeException{
         try{
-            String URL = frontendUrl + "/confirm?token="+user.getConfirmationToken();
+            String URL = frontendUrl + "/confirm?token="+user.getConfirmationToken()+"&flow=SIGNUP";
             emailService.sendSignupVerificationEmail(user.getUserEmail(), URL);
         } catch (MessagingException e) {
             throw new RuntimeException(e);
@@ -49,7 +49,7 @@ public class UserService {
 
     public void sendForgotPasswordVerificationEmail(User user) throws RuntimeException{
         try{
-            String URL = frontendUrl + "/confirm?token="+user.getConfirmationToken();
+            String URL = frontendUrl + "/confirm?token="+user.getConfirmationToken()+"&flow=FORGOTPASSWORD";
             emailService.sendForgotPasswordEmail(user.getUserEmail(), URL);
         } catch (MessagingException e) {
             throw new RuntimeException(e);

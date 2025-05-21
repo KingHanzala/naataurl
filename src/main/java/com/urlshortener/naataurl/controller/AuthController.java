@@ -145,7 +145,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/get-reset-token")
+    @PostMapping("/get-reset-token")
     public ResponseEntity<?> getResetToken(@RequestBody GetResetTokenRequest getResetTokenRequest) {
         try {
             GetResetTokenResponse getResetTokenResponse = null;
@@ -179,7 +179,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/validate-reset-token")
+    @PostMapping("/validate-reset-token")
     public ResponseEntity<?> validateResetToken(@RequestBody ValidateTokenRequest validateTokenRequest) {
         try {
             ValidateTokenResponse validateTokenResponse = null;
@@ -203,7 +203,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/validate-token")
+    @PostMapping("/validate-token")
     public ResponseEntity<?> validateToken(@RequestBody ValidateTokenRequest validateTokenRequest) {
         try {
             ValidateTokenResponse validateTokenResponse = null;
