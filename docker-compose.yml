@@ -22,3 +22,4 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - PORT=${PORT}
       - MAIL_PORT=${MAIL_PORT}
+      - SHORT_FRONTEND_URL=${SHORT_FRONTEND_URL}
