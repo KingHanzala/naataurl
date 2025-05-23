@@ -24,7 +24,7 @@ public class UserHelper {
     public void generateAndSetUserToken(User user){
         String token = generateRandomToken();
         user.setConfirmationToken(token);
-        Instant expiryInstant = Instant.now().plus(48, ChronoUnit.HOURS);
+        Instant expiryInstant = Instant.now().plus(24, ChronoUnit.HOURS);
         user.setTokenExpiry(Date.from(expiryInstant));
     }
 
