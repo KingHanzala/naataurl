@@ -55,7 +55,7 @@ public class EmailService {
         logger.debug("Attempting to send forgot password email to: {}", to);
         try {
             String content = loadContent(FORGOT_PASSWORD_CONTENT_PATH).replace("${url}", url);
-            sendHtmlEmail(to, "Reset Your Password - Cryptoutils", content);
+            sendHtmlEmail(to, "Reset Your Password - MiniLink", content);
             logger.info("Successfully sent forgot password email to: {}", to);
         } catch (IOException e) {
             logger.error("Failed to load forgot password email content. Error: {}", e.getMessage(), e);
@@ -70,7 +70,7 @@ public class EmailService {
         logger.debug("Attempting to send signup verification email to: {}", to);
         try {
             String content = loadContent(SIGNUP_VERIFICATION_CONTENT_PATH).replace("${url}", url);
-            sendHtmlEmail(to, "Verify Your Email - Cryptoutils", content);
+            sendHtmlEmail(to, "Verify Your Email - MiniLink", content);
             logger.info("Successfully sent signup verification email to: {}", to);
         } catch (IOException e) {
             logger.error("Failed to load signup verification email content. Error: {}", e.getMessage(), e);
