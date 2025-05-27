@@ -2,12 +2,10 @@ package com.urlshortener.naataurl.security;
 
 import com.urlshortener.naataurl.service.UserService;
 import com.urlshortener.naataurl.persistence.model.User;
-import com.urlshortener.naataurl.utils.AuthHelper;
 import com.urlshortener.naataurl.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +26,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private AuthHelper authHelper;
-
     @SuppressWarnings("null")
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -38,15 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
         throws ServletException, IOException {
 
-        Cookie[] cookies = request.getCookies();
-        if (cookies==null || cookies.length == 0) {
+        final String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHelper.getJwtFromCookies(request);
+        final String jwt = authHeader.substring(7);
         if(jwt == null){
-            filterChain.doFilter(request, response);
             return;
         }
 
