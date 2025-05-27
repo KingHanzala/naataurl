@@ -2,12 +2,11 @@ package com.urlshortener.naataurl.controller;
 
 import com.urlshortener.naataurl.request.*;
 import com.urlshortener.naataurl.response.*;
-import com.urlshortener.naataurl.utils.*;
-import jakarta.servlet.http.Cookie;
+import com.urlshortener.naataurl.utils.UrlMapperHelper;
+import com.urlshortener.naataurl.utils.UserHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,13 +15,13 @@ import org.springframework.web.bind.annotation.*;
 
 import com.urlshortener.naataurl.persistence.model.User;
 import com.urlshortener.naataurl.service.UserService;
+import com.urlshortener.naataurl.utils.JwtUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
 import java.util.Date;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/auth")
@@ -41,33 +40,8 @@ public class AuthController {
 
     private @Autowired UserHelper userHelper;
 
-    private @Autowired AuthHelper authHelper;
-
-    @GetMapping("/check")
-    public ResponseEntity<?> checkAuth(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies==null || cookies.length == 0) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No auth cookie found.");
-        }
-        String jwt = authHelper.getJwtFromCookies(request);
-        if (jwt == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No auth cookie found.");
-        }
-
-        try {
-            String email = jwtUtils.extractEmail(jwt);
-            User user = userService.findByUserEmail(email);
-            if (user == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token.");
-            }
-            return ResponseEntity.ok().body(new AuthCheckResponse(true));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token.");
-        }
-    }
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             User user = userService.findByUserEmail(loginRequest.getEmail());
             String password = loginRequest.getPassword();
@@ -82,10 +56,6 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "User is not verified."));
             }
             String token = jwtUtils.generateToken(user);
-            Set<ResponseCookie> cookieSet = authHelper.cookiesToBeAdded(user, token);
-            for (ResponseCookie cookie : cookieSet) {
-                response.addHeader("Set-Cookie", cookie.toString());
-            }
             LoginResponse loginResponse = new LoginResponse(token, new UserResponse(user.getUserId(), user.getUserName(), user.getUserEmail()));
             
             return ResponseEntity.ok(loginResponse);
@@ -122,10 +92,6 @@ public class AuthController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {
             new SecurityContextLogoutHandler().logout(request, response, auth);
-        }
-        Set<ResponseCookie> cookieSet = authHelper.clearCookies();
-        for (ResponseCookie cookie : cookieSet) {
-            response.addHeader("Set-Cookie", cookie.toString());
         }
         return ResponseEntity.ok("Logged out successfully");
     }
