@@ -1,11 +1,15 @@
 package com.urlshortener.naataurl.service;
 
 import com.urlshortener.naataurl.persistence.model.User;
+import com.urlshortener.naataurl.utils.AuthHelper;
 import com.urlshortener.naataurl.utils.JwtUtils;
+
+import jakarta.servlet.http.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -17,6 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -26,6 +31,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private UserService userService;
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private AuthHelper authHelper;
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -55,8 +63,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             }
             String token = jwtUtils.generateToken(user);
             log.info("Generated JWT token for user {}: {}", email, token);
-            // Redirect to frontend with token
-            response.sendRedirect(frontendUrl + "/successCallback?token=" + token);
+            Set<ResponseCookie> cookieSet = authHelper.cookiesToBeAdded(user, token);
+            for (ResponseCookie cookie : cookieSet) {
+                response.addHeader("Set-Cookie", cookie.toString());
+            }
+            response.sendRedirect(frontendUrl);
 
         } catch (Exception e) {
             log.error("Error during OAuth2 login success handling", e);
