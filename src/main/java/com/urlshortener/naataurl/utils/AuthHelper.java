@@ -77,8 +77,9 @@ public class AuthHelper {
     }
 
     public String getJwtFromCookies(HttpServletRequest request) {
+        String cookieType = appName + delim + JWT;
         for (Cookie cookie : request.getCookies()) {
-            if ("jwt".equals(cookie.getName())) {
+            if (cookieType.equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }
