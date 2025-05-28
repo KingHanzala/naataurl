@@ -1,5 +1,6 @@
 package com.urlshortener.naataurl.controller;
 
+import com.urlshortener.naataurl.manager.RedisManager;
 import com.urlshortener.naataurl.request.UrlRequest;
 import com.urlshortener.naataurl.response.UrlResponse;
 import com.urlshortener.naataurl.service.UrlService;
@@ -18,12 +19,17 @@ import com.urlshortener.naataurl.response.ExceptionResponse;
 import com.urlshortener.naataurl.utils.UrlMapperHelper;
 import com.urlshortener.naataurl.persistence.model.UrlMapper;
 
+import java.time.LocalDateTime;
+import java.util.Date;
+
 @RestController
 public class UrlController {
 
     private @Autowired UrlMapperHelper urlMapperHelper;
 
     private @Autowired UrlService urlService;
+
+    private @Autowired RedisManager redisManager;
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -55,16 +61,21 @@ public class UrlController {
 
     @GetMapping("/{shortUrl}")
     public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl){
-        UrlMapper urlMapper = urlService.findByShortUrl(shortUrl);
-        if(urlMapper == null) {
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", frontendUrl)
-                    .build();
+        String originalUrl = redisManager.getOriginalUrl(shortUrl);
+        UrlMapper urlMapper = null;
+        if(originalUrl == null) {
+            urlMapper = urlService.findByShortUrl(shortUrl);
+            if (urlMapper == null) {
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", frontendUrl)
+                        .build();
+            }
+            originalUrl = urlMapper.getOriginalUrl();
         }
-        urlMapper.incrementClicks();
-        urlService.saveUrlMapper(urlMapper);
+        redisManager.incrementUrlClicks(shortUrl);
+        //urlService.syncClicksToDb(urlMapper, shortUrl);
         return ResponseEntity.status(HttpStatus.FOUND)
-            .header("Location", urlMapper.getOriginalUrl())
+            .header("Location", originalUrl)
             .build();
     }
 }

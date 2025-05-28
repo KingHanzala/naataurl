@@ -89,4 +89,8 @@ public class RedisService {
     public Set<Object> getRandomSetMembers(String key, long count) {
         return new HashSet<>(redisTemplate.opsForSet().randomMembers(key, count));
     }
+
+    public Long increment(String key) {
+        return redisTemplate.opsForValue().increment(key);
+    }
 } 

@@ -2,7 +2,9 @@ package com.urlshortener.naataurl.utils;
 
 import java.util.Date;
 
+import com.urlshortener.naataurl.manager.RedisManager;
 import com.urlshortener.naataurl.persistence.model.User;
+import com.urlshortener.naataurl.response.GetUrlInfoResponse;
 import com.urlshortener.naataurl.response.UrlResponse;
 import com.urlshortener.naataurl.service.UserService;
 import lombok.Getter;
@@ -27,6 +29,7 @@ public class UrlMapperHelper {
     private @Autowired UrlService urlService;
     private @Autowired UserService userService;
     private @Autowired JwtUtils jwtUtil;
+    private @Autowired RedisManager redisManager;
 
     public UrlResponse getShortUrl(String originalUrl, Long userId) throws Exception {
         UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
@@ -58,6 +61,8 @@ public class UrlMapperHelper {
         urlMapper.setOriginalUrl(originalUrl);
         urlMapper.setShortUrl(shortUrl);
         urlMapper.setCreatedAt(new Date());
+        redisManager.handleCreateUrlMapper(urlId, new GetUrlInfoResponse(originalUrl,shortUrl,0L,urlMapper.getCreatedAt(),userId));
+        redisManager.addShortUrlToCache(shortUrl,originalUrl);
         try {
             urlService.saveUrlMapper(urlMapper);
         } catch (Exception e) {

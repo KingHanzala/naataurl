@@ -2,6 +2,7 @@ package com.urlshortener.naataurl.controller;
 
 
 import com.urlshortener.naataurl.response.*;
+import com.urlshortener.naataurl.service.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class UserController {
     private @Autowired UrlMapperHelper urlMapperHelper;
     private @Autowired UserService userService;
     private @Autowired UrlService urlService;
+    private @Autowired RedisService redisService;
 
     @GetMapping("/dashboard")
     ResponseEntity<?> getUserDashboard(Authentication authentication) {
