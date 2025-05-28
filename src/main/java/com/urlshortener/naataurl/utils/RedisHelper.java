@@ -21,6 +21,8 @@ public class RedisHelper {
     public static final String URL_CLICKS_KEY = CLICKS_PREFIX + "url:%s"; // %s will be shortUrl// %s will be date
     public static final String URL_CLICKS_KEY_LAST_DBUPDATE = CLICKS_PREFIX + "urltimestamp:%s";
 
+    public static final String LAST_OP_FLAG = "last_operation_flag";
+
     public String getUrlMapperKey(String urlId){
         return String.format(URL_MAPPER_KEY, urlId);
     }
@@ -43,5 +45,9 @@ public class RedisHelper {
 
     public String getDashboardKey(String userId) {
         return String.format(DASHBOARD_KEY, userId);
+    }
+
+    public String getLastOpFlag(){
+        return LAST_OP_FLAG;
     }
 }

@@ -34,13 +34,25 @@ public class UrlClickSyncService {
     public void syncUrlClicks() {
         log.info("Starting URL clicks sync task");
         try {
+            // Check last operation flag
+            Object lastOpFlag = redisService.get(RedisHelper.LAST_OP_FLAG);
+            if (lastOpFlag != null && !lastOpFlag.equals(1)) {
+                log.info("Skipping sync as last operation flag is set to {}", lastOpFlag);
+                return;
+            }
+
+            // Initialize last operation flag if it doesn't exist
+            if (lastOpFlag == null) {
+                redisService.set(RedisHelper.LAST_OP_FLAG, 0);
+                log.info("Initialized last operation flag to 0");
+            }
+
             // Get all URL click keys from Redis
             Set<String> urlClickKeys = redisService.keys(RedisHelper.URL_CLICKS_KEY_FORMAT + "*");
             
             for (String clickKey : urlClickKeys) {
                 String shortUrl = extractShortUrlFromKey(clickKey);
                 if (shortUrl == null) continue;
-
                 // Get last DB update timestamp
                 String lastUpdateKey = String.format(RedisHelper.URL_CLICKS_KEY_LAST_DBUPDATE, shortUrl);
                 Object lastUpdateObj = redisService.get(lastUpdateKey);
@@ -51,8 +63,19 @@ public class UrlClickSyncService {
                     syncUrlClicksToDb(shortUrl);
                 }
             }
+
+            // Set last operation flag to 0 after successful sync
+            redisService.set(RedisHelper.LAST_OP_FLAG, 0);
+            log.info("Set last operation flag to 0 after successful sync");
         } catch (Exception e) {
             log.error("Error during URL clicks sync: {}", e.getMessage(), e);
+            // Ensure flag is set to 0 even if sync fails
+            try {
+                redisService.set(RedisHelper.LAST_OP_FLAG, 0);
+                log.info("Set last operation flag to 0 after sync failure");
+            } catch (Exception ex) {
+                log.error("Failed to reset last operation flag after sync failure: {}", ex.getMessage());
+            }
         }
         log.info("Completed URL clicks sync task");
     }

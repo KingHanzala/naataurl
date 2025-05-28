@@ -4,7 +4,9 @@ import com.urlshortener.naataurl.manager.RedisManager;
 import com.urlshortener.naataurl.manager.UrlManager;
 import com.urlshortener.naataurl.request.UrlRequest;
 import com.urlshortener.naataurl.response.UrlResponse;
+import com.urlshortener.naataurl.service.RedisService;
 import com.urlshortener.naataurl.service.UrlService;
+import com.urlshortener.naataurl.utils.RedisHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,8 +25,8 @@ import com.urlshortener.naataurl.utils.UrlMapperHelper;
 public class UrlController {
 
     private @Autowired UrlMapperHelper urlMapperHelper;
-
     private @Autowired UrlManager urlManager;
+    private @Autowired RedisService redisService;
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -56,12 +58,16 @@ public class UrlController {
 
     @GetMapping("/{shortUrl}")
     public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl){
+        
         String originalUrl = urlManager.getOriginalUrl(shortUrl);
         if(originalUrl == null){
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", frontendUrl)
                     .build();
         }
+        // Set last operation flag to 1 before processing
+        redisService.set(RedisHelper.LAST_OP_FLAG, 1);
+
         return ResponseEntity.status(HttpStatus.FOUND)
             .header("Location", originalUrl)
             .build();
