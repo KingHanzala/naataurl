@@ -18,6 +18,7 @@ public class RedisHelper {
     public static final String USER_MAPPER_KEY = MAPPER_PREFIX + "user:%d";
     public static final String URL_MAPPER_KEY = MAPPER_PREFIX + "url:%s";
     public static final String ORIGINAL_URL_KEY = ORIGINAL_URL_PREFIX + "url:%s";
+    private static final String DASHBOARD_KEY = DASHBOARD_PREFIX + "user:%s";
     // %d will be userId
     
     // User related keys
@@ -87,4 +88,8 @@ public class RedisHelper {
     public boolean isStatsKey(String key) {
         return key.startsWith(CLICKS_PREFIX);
     }
-} 
+
+    public String getDashboardKey(String userId) {
+        return String.format(DASHBOARD_KEY, userId);
+    }
+}

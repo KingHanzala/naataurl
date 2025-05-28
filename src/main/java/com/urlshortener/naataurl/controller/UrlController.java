@@ -1,6 +1,7 @@
 package com.urlshortener.naataurl.controller;
 
 import com.urlshortener.naataurl.manager.RedisManager;
+import com.urlshortener.naataurl.manager.UrlManager;
 import com.urlshortener.naataurl.request.UrlRequest;
 import com.urlshortener.naataurl.response.UrlResponse;
 import com.urlshortener.naataurl.service.UrlService;
@@ -17,19 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.urlshortener.naataurl.response.ExceptionResponse;
 import com.urlshortener.naataurl.utils.UrlMapperHelper;
-import com.urlshortener.naataurl.persistence.model.UrlMapper;
-
-import java.time.LocalDateTime;
-import java.util.Date;
 
 @RestController
 public class UrlController {
 
     private @Autowired UrlMapperHelper urlMapperHelper;
 
-    private @Autowired UrlService urlService;
-
-    private @Autowired RedisManager redisManager;
+    private @Autowired UrlManager urlManager;
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -47,7 +42,7 @@ public class UrlController {
         }
         UrlResponse urlResponse = null;
         try {
-            urlResponse = urlMapperHelper.getShortUrl(request.getLongUrl(), userId);
+            urlResponse = urlManager.createUrlMapper(request.getLongUrl(), userId);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ExceptionResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), "Service unavailable"));
         } catch (Exception e) {
@@ -61,19 +56,12 @@ public class UrlController {
 
     @GetMapping("/{shortUrl}")
     public ResponseEntity<?> getOriginalUrl(@PathVariable String shortUrl){
-        String originalUrl = redisManager.getOriginalUrl(shortUrl);
-        UrlMapper urlMapper = null;
-        if(originalUrl == null) {
-            urlMapper = urlService.findByShortUrl(shortUrl);
-            if (urlMapper == null) {
-                return ResponseEntity.status(HttpStatus.FOUND)
-                        .header("Location", frontendUrl)
-                        .build();
-            }
-            originalUrl = urlMapper.getOriginalUrl();
+        String originalUrl = urlManager.getOriginalUrl(shortUrl);
+        if(originalUrl == null){
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", frontendUrl)
+                    .build();
         }
-        redisManager.incrementUrlClicks(shortUrl);
-        //urlService.syncClicksToDb(urlMapper, shortUrl);
         return ResponseEntity.status(HttpStatus.FOUND)
             .header("Location", originalUrl)
             .build();

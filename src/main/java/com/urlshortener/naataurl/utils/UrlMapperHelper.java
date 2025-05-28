@@ -27,51 +27,7 @@ public class UrlMapperHelper {
 
     @Getter
     private @Autowired UrlService urlService;
-    private @Autowired UserService userService;
     private @Autowired JwtUtils jwtUtil;
-    private @Autowired RedisManager redisManager;
-
-    public UrlResponse getShortUrl(String originalUrl, Long userId) throws Exception {
-        UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
-        UrlResponse urlResponse = null;
-        User user = userService.findByUserId(userId);
-        if (urlMapper != null) {
-            urlResponse = new UrlResponse(urlMapper.getShortUrl(), user.getUsageCredits());
-            return urlResponse;
-        }
-        if (user == null) {
-            logger.info("User not found");
-            return null;
-        } else if (user.getUsageCredits() == 0) {
-            throw new Exception();
-        } else {
-            user.decrementCredits();
-        }
-
-        Long urlId = urlService.getNextUrlId();
-        String shortUrl = null;
-        try {
-            shortUrl = hashUrl(urlId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e);
-        }
-        urlMapper = new UrlMapper();
-        urlMapper.setUrlId(urlId);
-        urlMapper.setUserId(userId);
-        urlMapper.setOriginalUrl(originalUrl);
-        urlMapper.setShortUrl(shortUrl);
-        urlMapper.setCreatedAt(new Date());
-        redisManager.handleCreateUrlMapper(urlId, new GetUrlInfoResponse(originalUrl,shortUrl,0L,urlMapper.getCreatedAt(),userId));
-        redisManager.addShortUrlToCache(shortUrl,originalUrl);
-        try {
-            urlService.saveUrlMapper(urlMapper);
-        } catch (Exception e) {
-            user.incrementCredits();
-            throw new RuntimeException(e);
-        }
-        userService.saveUser(user);
-        return new UrlResponse(shortUrl,user.getUsageCredits());
-    }
 
     public String hashUrl(long id) {
         if (id < 0 || id > MAX_ID) {
