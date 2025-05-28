@@ -159,7 +159,7 @@ public class UrlManager {
         } else {
             List<GetUrlInfoResponse> getUrlInfoResponses = getUserDashboardResponse.getUrlsMappedList();
             for(GetUrlInfoResponse getUrlInfoResponse: getUrlInfoResponses){
-                Long clicks = redisManager.getUrlClicks(getUrlInfoResponse.getShortUrl());
+                Long clicks = getUrlClicks(getUrlInfoResponse.getShortUrl());
                 getUrlInfoResponse.setUrlClicks(clicks);
             }
         }

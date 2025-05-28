@@ -8,6 +8,7 @@ import com.urlshortener.naataurl.utils.RedisHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -18,6 +19,13 @@ import java.util.stream.Collectors;
 @Component
 public class RedisManager {
     private static final Logger log = LoggerFactory.getLogger(RedisManager.class);
+
+    @Value("${dashboard.cache.ttl:3600000}")
+    private Long dashboardCacheTtl;
+
+    @Value("${clicks.cache.ttl:86400000}")
+    private Long clicksCacheTtl;
+
     private @Autowired RedisService redisService;
     private @Autowired RedisHelper redisHelper;
     private @Autowired ObjectMapper objectMapper;
@@ -130,5 +138,7 @@ public class RedisManager {
     public void addClickToCache(String shortUrl, Long click) {
         String getUrlClicksKey = redisHelper.getUrlClicksKey(shortUrl);
         redisService.set(getUrlClicksKey, click);
+        String lastUpdateKey = redisHelper.getUrlClicksKeyLastDbUpdate(shortUrl);
+        redisService.set(lastUpdateKey, System.currentTimeMillis());
     }
 }

@@ -93,4 +93,8 @@ public class RedisService {
     public Long increment(String key) {
         return redisTemplate.opsForValue().increment(key);
     }
+
+    public Set<String> keys(String pattern) {
+        return redisTemplate.keys(pattern);
+    }
 } 
