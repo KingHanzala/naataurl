@@ -49,13 +49,7 @@ public class UserController {
         }
 
         // Get user's URLs
-        GetUserDashboardResponse getUserDashboardResponse = null;
-        getUserDashboardResponse = redisManager.getUserDashboardResponse(String.valueOf(userId));
-        if(getUserDashboardResponse == null){
-            getUserDashboardResponse = urlManager.getUserDashboardResponse(userId);
-            redisManager.saveUserDashboard(String.valueOf(userId), getUserDashboardResponse);
-        }
-
+        GetUserDashboardResponse getUserDashboardResponse = urlManager.getUserDashboardResponse(userId);
         return ResponseEntity.ok(getUserDashboardResponse);
     }
 }

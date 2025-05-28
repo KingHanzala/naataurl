@@ -73,6 +73,16 @@ public class UrlManager {
         return originalUrl;
     }
 
+    public Long getUrlClicks(String shortUrl){
+        Long clicks = redisManager.getUrlClicks(shortUrl);
+        if(clicks == null){
+            UrlMapper urlMapper = urlService.findByShortUrl(shortUrl);
+            clicks = urlMapper.getUrlClicks();
+            redisManager.addClickToCache(shortUrl, clicks);
+        }
+        return clicks;
+    }
+
     public UrlResponse createUrlMapper(String originalUrl, Long userId) throws Exception {
         UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
         UrlResponse urlResponse = null;
@@ -115,7 +125,7 @@ public class UrlManager {
         return new UrlResponse(shortUrl,user.getUsageCredits());
     }
 
-    public GetUserDashboardResponse getUserDashboardResponse(Long userId){
+    public GetUserDashboardResponse getUserDashboardResponseFromDb(Long userId){
         User user = userService.findByUserId(userId);
         if(user == null){
             return null;
@@ -133,11 +143,27 @@ public class UrlManager {
                 .collect(Collectors.toList());
 
         // Create response
-        GetUserDashboardResponse response = new GetUserDashboardResponse();
-        response.setUserResponse(new UserResponse(user.getUserId(), user.getUserName(), user.getUserEmail()));
-        response.setUrlsMappedList(urls);
-        response.setAvailableCredits(user.getUsageCredits());
-        return response;
+        GetUserDashboardResponse getUserDashboardResponse = new GetUserDashboardResponse();
+        getUserDashboardResponse.setUserResponse(new UserResponse(user.getUserId(), user.getUserName(), user.getUserEmail()));
+        getUserDashboardResponse.setUrlsMappedList(urls);
+        getUserDashboardResponse.setAvailableCredits(user.getUsageCredits());
+        return getUserDashboardResponse;
+    }
+
+    public GetUserDashboardResponse getUserDashboardResponse(Long userId){
+        GetUserDashboardResponse getUserDashboardResponse = redisManager.getUserDashboardResponse(String.valueOf(userId));
+
+        if(getUserDashboardResponse == null){
+            getUserDashboardResponse = getUserDashboardResponseFromDb(userId);
+            redisManager.saveUserDashboard(String.valueOf(userId), getUserDashboardResponse);
+        } else {
+            List<GetUrlInfoResponse> getUrlInfoResponses = getUserDashboardResponse.getUrlsMappedList();
+            for(GetUrlInfoResponse getUrlInfoResponse: getUrlInfoResponses){
+                Long clicks = redisManager.getUrlClicks(getUrlInfoResponse.getShortUrl());
+                getUrlInfoResponse.setUrlClicks(clicks);
+            }
+        }
+        return getUserDashboardResponse;
     }
 
     public void handleCreateUrlMapper(Long userId, GetUrlInfoResponse getUrlInfoResponse){
@@ -154,7 +180,7 @@ public class UrlManager {
     public void saveUrlInfoResponseToRedis(String userId, GetUrlInfoResponse response) {
         GetUserDashboardResponse getUserDashboardResponse = redisManager.getUserDashboardResponse(userId);
         if(getUserDashboardResponse == null){
-            getUserDashboardResponse = getUserDashboardResponse(Long.parseLong(userId));
+            getUserDashboardResponse = getUserDashboardResponseFromDb(Long.parseLong(userId));
         }
         if(getUserDashboardResponse == null) return;
 

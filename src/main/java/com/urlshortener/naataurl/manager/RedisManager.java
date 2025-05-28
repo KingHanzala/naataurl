@@ -81,6 +81,9 @@ public class RedisManager {
         if(urlClicks == null){
             return null;
         }
+        if (urlClicks instanceof Integer) {
+            return ((Integer) urlClicks).longValue();
+        }
         return (Long) urlClicks;
     }
 
@@ -109,7 +112,7 @@ public class RedisManager {
                 return null;
             }
         }
-        if(getUserDashboardResponse == null){
+        if(getUserDashboardResponse == null) {
             return null;
         }
         return getUserDashboardResponse;

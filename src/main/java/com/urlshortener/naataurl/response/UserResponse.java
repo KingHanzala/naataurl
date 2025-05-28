@@ -8,6 +8,10 @@ public class UserResponse {
     private String userName;
     private String email;
 
+    public UserResponse() {
+        // Default constructor required for Jackson deserialization
+    }
+
     public UserResponse(Long userId, String userName, String email){
         this.userId = userId;
         this.userName = userName;
