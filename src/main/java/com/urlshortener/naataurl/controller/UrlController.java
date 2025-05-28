@@ -1,11 +1,9 @@
 package com.urlshortener.naataurl.controller;
 
-import com.urlshortener.naataurl.manager.RedisManager;
 import com.urlshortener.naataurl.manager.UrlManager;
 import com.urlshortener.naataurl.request.UrlRequest;
 import com.urlshortener.naataurl.response.UrlResponse;
 import com.urlshortener.naataurl.service.RedisService;
-import com.urlshortener.naataurl.service.UrlService;
 import com.urlshortener.naataurl.utils.RedisHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

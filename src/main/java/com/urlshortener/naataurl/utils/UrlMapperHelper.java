@@ -1,20 +1,10 @@
 package com.urlshortener.naataurl.utils;
-
-import java.util.Date;
-
-import com.urlshortener.naataurl.manager.RedisManager;
-import com.urlshortener.naataurl.persistence.model.User;
-import com.urlshortener.naataurl.response.GetUrlInfoResponse;
-import com.urlshortener.naataurl.response.UrlResponse;
-import com.urlshortener.naataurl.service.UserService;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
-import com.urlshortener.naataurl.persistence.model.UrlMapper;
 import com.urlshortener.naataurl.service.UrlService;
 
 @Component

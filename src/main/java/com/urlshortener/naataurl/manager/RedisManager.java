@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -44,42 +45,6 @@ public class RedisManager {
                 .collect(Collectors.toSet());
     }
 
-    public void addUrlIdToUserMapping(Long userId, String urlId) {
-        String userMapperKey = redisHelper.getUserMapperKey(userId);
-        redisService.addToSet(userMapperKey, urlId);
-    }
-
-    public GetUrlInfoResponse getUrlInfoResponse(String urlId) {
-        String getUrlIdKey = redisHelper.getUrlMapperKey(urlId);
-        Object urlMapper = redisService.get(getUrlIdKey);
-
-        if (urlMapper == null) {
-            return null;
-        }
-        GetUrlInfoResponse getUrlInfoResponse = null;
-        if (urlMapper instanceof GetUrlInfoResponse) {
-            getUrlInfoResponse = (GetUrlInfoResponse) urlMapper;
-        }
-        else {
-            // Optional: handle deserialization if redis returns JSON/string instead of object
-            try {
-                getUrlInfoResponse = objectMapper.readValue(urlMapper.toString(), GetUrlInfoResponse.class);
-            } catch (Exception e) {
-                // Log the exception if needed
-                log.error("unable to parse url for url id: {}, Error: {}", urlId, e.getMessage());
-                return null;
-            }
-        }
-        if(getUrlInfoResponse == null){
-            return null;
-        }
-        String shortUrl = getUrlInfoResponse.getShortUrl();
-        Long clicks = getUrlClicks(shortUrl);
-        if( clicks != null)
-            getUrlInfoResponse.setUrlClicks(clicks);
-        return getUrlInfoResponse;
-    }
-
 
     public Long getUrlClicks(String shortUrl) {
         String getUrlClicksKey = redisHelper.getUrlClicksKey(shortUrl);
@@ -91,11 +56,6 @@ public class RedisManager {
             return ((Integer) urlClicks).longValue();
         }
         return (Long) urlClicks;
-    }
-
-    public void saveUserDashboard(String userId, GetUserDashboardResponse getUserDashboardResponse){
-        String dashboardKey = redisHelper.getDashboardKey(userId);
-        redisService.set(dashboardKey, getUserDashboardResponse);
     }
 
     public GetUserDashboardResponse getUserDashboardResponse(String userId){
@@ -137,8 +97,19 @@ public class RedisManager {
 
     public void addClickToCache(String shortUrl, Long click) {
         String getUrlClicksKey = redisHelper.getUrlClicksKey(shortUrl);
-        redisService.set(getUrlClicksKey, click);
         String lastUpdateKey = redisHelper.getUrlClicksKeyLastDbUpdate(shortUrl);
-        redisService.set(lastUpdateKey, System.currentTimeMillis());
+        if(clicksCacheTtl!=null) {
+            redisService.set(getUrlClicksKey, click, clicksCacheTtl, TimeUnit.MILLISECONDS);
+            redisService.set(lastUpdateKey, System.currentTimeMillis(), clicksCacheTtl, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    public void saveUserDashboard(String userId, GetUserDashboardResponse getUserDashboardResponse){
+        String dashboardKey = redisHelper.getDashboardKey(userId);
+        if(dashboardCacheTtl!=null) {
+            redisService.set(dashboardKey, getUserDashboardResponse, dashboardCacheTtl, TimeUnit.MILLISECONDS);
+        } else {
+            redisService.set(dashboardKey, getUserDashboardResponse);
+        }
     }
 }
