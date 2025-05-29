@@ -32,6 +32,7 @@ public class UrlClickSyncService {
 
     @Scheduled(fixedRateString = "${click.sync.interval.ms:3600000}")
     public void syncUrlClicks() {
+        boolean updatesPending = false;
         log.info("Starting URL clicks sync task");
         try {
             // Check last operation flag
@@ -39,12 +40,6 @@ public class UrlClickSyncService {
             if (lastOpFlag != null && !lastOpFlag.equals(1)) {
                 log.info("Skipping sync as last operation flag is set to {}", lastOpFlag);
                 return;
-            }
-
-            // Initialize last operation flag if it doesn't exist
-            if (lastOpFlag == null) {
-                redisService.set(RedisHelper.LAST_OP_FLAG, 0);
-                log.info("Initialized last operation flag to 0");
             }
 
             // Get all URL click keys from Redis
@@ -61,18 +56,22 @@ public class UrlClickSyncService {
                 // Check if sync interval has passed since last update
                 if (System.currentTimeMillis() - lastUpdateTime >= getSyncIntervalMs()) {
                     syncUrlClicksToDb(shortUrl);
+                } else {
+                    updatesPending = true;
                 }
             }
-
-            // Set last operation flag to 0 after successful sync
-            redisService.set(RedisHelper.LAST_OP_FLAG, 0);
+            if(updatesPending){
+                redisService.set(RedisHelper.LAST_OP_FLAG, 1);
+            } else {
+                redisService.set(RedisHelper.LAST_OP_FLAG, 0);
+            }
             log.info("Set last operation flag to 0 after successful sync");
         } catch (Exception e) {
             log.error("Error during URL clicks sync: {}", e.getMessage(), e);
             // Ensure flag is set to 0 even if sync fails
             try {
-                redisService.set(RedisHelper.LAST_OP_FLAG, 0);
-                log.info("Set last operation flag to 0 after sync failure");
+                redisService.set(RedisHelper.LAST_OP_FLAG, 1);
+                log.info("Set last operation flag to 1 after sync failure to retry in next sync");
             } catch (Exception ex) {
                 log.error("Failed to reset last operation flag after sync failure: {}", ex.getMessage());
             }
