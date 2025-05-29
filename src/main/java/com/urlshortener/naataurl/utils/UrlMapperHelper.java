@@ -60,7 +60,6 @@ public class UrlMapperHelper {
             throw new IllegalArgumentException("User ID not found in JWT token");
         }
 
-        logger.info("Got User ID from JWT: {}", userId);
         return userId;
     }
 }
