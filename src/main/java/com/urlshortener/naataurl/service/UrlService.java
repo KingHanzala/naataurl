@@ -10,6 +10,7 @@ import com.urlshortener.naataurl.persistence.repository.UrlMapperRepository;
 
 @Service
 public class UrlService {
+
     private @Autowired UrlMapperRepository urlMapperRespository;
     
     public UrlMapper findByOriginalUrl(String originalUrl, Long userId){

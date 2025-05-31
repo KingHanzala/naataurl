@@ -44,8 +44,13 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             User user = userService.findByUserEmail(loginRequest.getEmail());
+            String password = loginRequest.getPassword();
             if(user == null){
                 return ResponseEntity.badRequest().body("User is not registered");
+            }
+            if (StringHelper.isEmpty(password) || !passwordEncoder.matches(password, user.getUserPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Password"));
             }
             if(!user.isVerified()){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(), "User is not verified."));
@@ -62,7 +67,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
         if (userService.findByUserEmail(registerRequest.getEmail()) != null) {
-            return ResponseEntity.badRequest().body("Email already exists");
+            return ResponseEntity.badRequest().body("User already signed up. Please Login or verify your email if not done already.");
         }
 
         User user = new User();
@@ -71,6 +76,12 @@ public class AuthController {
         user.setUserPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setCreatedAt(new Date());
         userHelper.generateAndSetUserToken(user);
+        try{
+            userService.sendSignupVerificationEmail(user);
+        } catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Signup Failed! Please try again.");
+        }
+        userService.saveUser(user);
 
         RegisterResponse registerResponse = new RegisterResponse("SignUp successful! Please verify your email before logging in.");
         return ResponseEntity.ok(registerResponse);
@@ -139,7 +150,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/get-reset-token")
+    @PostMapping("/get-reset-token")
     public ResponseEntity<?> getResetToken(@RequestBody GetResetTokenRequest getResetTokenRequest) {
         try {
             GetResetTokenResponse getResetTokenResponse = null;
@@ -160,6 +171,12 @@ public class AuthController {
                 return ResponseEntity.ok(getResetTokenResponse);
             }
             userHelper.generateAndSetUserToken(user);
+            try{
+                userService.sendForgotPasswordVerificationEmail(user);
+            } catch (RuntimeException e){
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Password Reset Failed! Please try again.");
+            }
+            userService.saveUser(user);
             getResetTokenResponse = new GetResetTokenResponse(false);
             return ResponseEntity.ok(getResetTokenResponse);
         } catch (Exception e) {
@@ -167,7 +184,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/validate-reset-token")
+    @PostMapping("/validate-reset-token")
     public ResponseEntity<?> validateResetToken(@RequestBody ValidateTokenRequest validateTokenRequest) {
         try {
             ValidateTokenResponse validateTokenResponse = null;
@@ -191,7 +208,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/validate-token")
+    @PostMapping("/validate-token")
     public ResponseEntity<?> validateToken(@RequestBody ValidateTokenRequest validateTokenRequest) {
         try {
             ValidateTokenResponse validateTokenResponse = null;

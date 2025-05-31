@@ -1,7 +1,10 @@
 package com.urlshortener.naataurl.controller;
 
 
+import com.urlshortener.naataurl.manager.RedisManager;
+import com.urlshortener.naataurl.manager.UrlManager;
 import com.urlshortener.naataurl.response.*;
+import com.urlshortener.naataurl.service.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +27,8 @@ public class UserController {
 
     private @Autowired UrlMapperHelper urlMapperHelper;
     private @Autowired UserService userService;
-    private @Autowired UrlService urlService;
+    private @Autowired RedisManager redisManager;
+    private @Autowired UrlManager urlManager;
 
     @GetMapping("/dashboard")
     ResponseEntity<?> getUserDashboard(Authentication authentication) {
@@ -45,24 +49,7 @@ public class UserController {
         }
 
         // Get user's URLs
-        List<GetUrlInfoResponse> urls = urlService.findByUserId(userId).stream()
-            .map(urlMapper -> {
-                GetUrlInfoResponse urlInfo = new GetUrlInfoResponse();
-                urlInfo.setOriginalUrl(urlMapper.getOriginalUrl());
-                urlInfo.setShortUrl(urlMapper.getShortUrl());
-                urlInfo.setUrlClicks(urlMapper.getUrlClicks());
-                urlInfo.setCreatedDtm(urlMapper.getCreatedAt());
-                urlInfo.setUserId(urlMapper.getUserId());
-                return urlInfo;
-            })
-            .collect(Collectors.toList());
-
-        // Create response
-        GetUserDashboardResponse response = new GetUserDashboardResponse();
-        response.setUserResponse(new UserResponse(user.getUserId(), user.getUserName(), user.getUserEmail()));
-        response.setUrlsMappedList(urls);
-        response.setAvailableCredits(user.getUsageCredits());
-
-        return ResponseEntity.ok(response);
+        GetUserDashboardResponse getUserDashboardResponse = urlManager.getUserDashboardResponse(userId);
+        return ResponseEntity.ok(getUserDashboardResponse);
     }
 }
