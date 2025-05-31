@@ -1,7 +1,6 @@
 package com.urlshortener.naataurl.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.urlshortener.naataurl.response.GetUrlInfoResponse;
 import com.urlshortener.naataurl.response.GetUserDashboardResponse;
 import com.urlshortener.naataurl.service.RedisService;
 import com.urlshortener.naataurl.utils.RedisHelper;
