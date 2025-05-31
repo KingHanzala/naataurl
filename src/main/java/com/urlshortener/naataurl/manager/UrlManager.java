@@ -9,6 +9,7 @@ import com.urlshortener.naataurl.response.UserResponse;
 import com.urlshortener.naataurl.service.UrlService;
 import com.urlshortener.naataurl.service.UserService;
 import com.urlshortener.naataurl.utils.UrlMapperHelper;
+import com.urlshortener.naataurl.service.GoogleSafeBrowsingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class UrlManager {
     private @Autowired UserService userService;
 
     private @Autowired UrlMapperHelper urlMapperHelper;
+
+    private @Autowired GoogleSafeBrowsingService safeBrowsingService;
 
     private static final Logger logger = LoggerFactory.getLogger(UrlManager.class);
 
@@ -84,6 +87,11 @@ public class UrlManager {
     }
 
     public UrlResponse createUrlMapper(String originalUrl, Long userId) throws Exception {
+        // Check if URL is safe using Google Safe Browsing
+        if (!safeBrowsingService.isUrlSafe(originalUrl)) {
+            throw new IllegalArgumentException("URL is not safe according to Google Safe Browsing");
+        }
+
         UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
         UrlResponse urlResponse = null;
         User user = userService.findByUserId(userId);

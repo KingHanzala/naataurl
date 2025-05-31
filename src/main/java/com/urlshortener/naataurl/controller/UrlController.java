@@ -44,7 +44,7 @@ public class UrlController {
         try {
             urlResponse = urlManager.createUrlMapper(request.getLongUrl(), userId);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ExceptionResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), "Service unavailable"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), "URL is unsafe. Cannot complete operation."));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ExceptionResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), "Usage Credits Limit Exhausted"));
         }
