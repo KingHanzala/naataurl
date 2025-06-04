@@ -1,5 +1,8 @@
 package com.urlshortener.naataurl.utils;
 import lombok.Getter;
+
+import java.security.SecureRandom;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,30 +16,20 @@ public class UrlMapperHelper {
     private static final Logger logger = LoggerFactory.getLogger(UrlMapperHelper.class);
     
     private static final String BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final long MAX_ID = 1_000_000_000L;
 
     @Getter
     private @Autowired UrlService urlService;
     private @Autowired JwtUtils jwtUtil;
 
-    public String hashUrl(long id) {
-        if (id < 0 || id > MAX_ID) {
-            throw new IllegalArgumentException("ID must be between 0 and " + MAX_ID);
+    private static final int CODE_LENGTH = 7;
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    public String generateRandomShortCode() {
+        StringBuilder sb = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            int index = RANDOM.nextInt(62);
+            sb.append(BASE62.charAt(index));
         }
-
-        long reversed = MAX_ID - id;
-
-        if (reversed == 0) {
-            return String.valueOf(BASE62.charAt(0));
-        }
-
-        StringBuilder sb = new StringBuilder();
-        while (reversed > 0) {
-            int remainder = (int) (reversed % 62);
-            sb.insert(0, BASE62.charAt(remainder));
-            reversed /= 62;
-        }
-
         return sb.toString();
     }
 

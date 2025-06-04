@@ -82,6 +82,7 @@ public class UrlManager {
         }
         return clicks;
     }
+    
 
     public UrlResponse createUrlMapper(String originalUrl, Long userId) throws Exception {
         UrlMapper urlMapper = urlService.findByOriginalUrl(originalUrl, userId);
@@ -102,8 +103,18 @@ public class UrlManager {
 
         Long urlId = urlService.getNextUrlId();
         String shortUrl = null;
-        try {
-            shortUrl = urlMapperHelper.hashUrl(urlId);
+        int retries = 0;
+        int maxRetries = 5;
+        try {  
+            while (true) {
+                shortUrl = urlMapperHelper.generateRandomShortCode();
+                if (urlService.findByShortUrl(shortUrl) == null) {
+                    break;
+                }
+                if (++retries >= maxRetries) {
+                    throw new IllegalStateException("Failed to generate a unique short URL after " + maxRetries + " attempts");
+                }
+            }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(e);
         }
