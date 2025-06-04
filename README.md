@@ -1,11 +1,14 @@
 # naataurl
 
-A Spring Boot-based URL shortener backend with JWT authentication
+A Spring Boot-based URL shortener backend with JWT authentication, OAuth2 support, and Redis caching
 
 ## Table of Contents
 - [Overview](#overview)
+- [Features](#features)
 - [Setup & Requirements](#setup--requirements)
 - [Running the Application](#running-the-application)
+  - [Local Development](#local-development)
+  - [Docker Deployment](#docker-deployment)
 - [API Endpoints](#api-endpoints)
   - [Auth APIs](#auth-apis-auth)
   - [OAuth2 APIs](#oauth2-apis)
@@ -13,24 +16,45 @@ A Spring Boot-based URL shortener backend with JWT authentication
   - [User APIs](#user-apis)
 - [Authentication](#authentication)
 - [CORS & Frontend Integration](#cors--frontend-integration)
+- [Environment Variables](#environment-variables)
 
 ---
 
 ## Overview
-This project provides a backend for a URL shortener service. It supports user registration, login, JWT-based authentication, and URL shortening. PostgreSQL is the default database.
+This project provides a backend for a URL shortener service. It supports user registration, login, JWT-based authentication, OAuth2 integration, and URL shortening with Redis caching for improved performance.
+
+## Features
+- User authentication with JWT
+- OAuth2 integration (Google & GitHub)
+- URL shortening with custom aliases
+- Redis caching for improved performance
+- Email verification
+- Password reset functionality
+- Safe URL checking with Google Safe Browsing API
+- Docker support for easy deployment
 
 ## Setup & Requirements
 - Java 17+
 - Maven
-- PostgreSQL (configure in `application.properties`)
+- PostgreSQL
+- Redis
 - SendGrid API Key for email functionality
+- Docker & Docker Compose (for containerized deployment)
 
 ## Running the Application
+
+### Local Development
 1. **Clone the repository**
 2. **Set up environment variables:**
    ```sh
    export SENDGRID_API_KEY=your_sendgrid_api_key
    export MAIL_FROM=your_verified_sender_email
+   export JWT_SECRET=your_jwt_secret
+   export GOOGLE_CLIENT_ID=your_google_client_id
+   export GOOGLE_CLIENT_SECRET=your_google_client_secret
+   export GITHUB_CLIENT_ID=your_github_client_id
+   export GITHUB_CLIENT_SECRET=your_github_client_secret
+   export GOOGLE_SAFEBROWSING_API=your_safebrowsing_api_key
    ```
 3. **Clean and install** 
    ```sh
@@ -40,6 +64,35 @@ This project provides a backend for a URL shortener service. It supports user re
    ```sh
    mvn spring-boot:run
    ```
+
+### Docker Deployment
+1. **Create a `.env` file with all required environment variables**
+2. **Build and run using Docker Compose:**
+   ```sh
+   docker-compose up --build
+   ```
+
+## Environment Variables
+The following environment variables are required for the application:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| SENDGRID_API_KEY | API key for SendGrid email service | Yes |
+| MAIL_FROM | Verified sender email address | Yes |
+| JWT_SECRET | Secret key for JWT token generation | Yes |
+| GOOGLE_CLIENT_ID | Google OAuth2 client ID | Yes |
+| GOOGLE_CLIENT_SECRET | Google OAuth2 client secret | Yes |
+| GITHUB_CLIENT_ID | GitHub OAuth2 client ID | Yes |
+| GITHUB_CLIENT_SECRET | GitHub OAuth2 client secret | Yes |
+| GOOGLE_SAFEBROWSING_API | Google Safe Browsing API key | Yes |
+| SPRING_DATASOURCE_URL | PostgreSQL database URL | Yes |
+| SPRING_DATASOURCE_USERNAME | Database username | Yes |
+| SPRING_DATASOURCE_PASSWORD | Database password | Yes |
+| REDIS_HOST | Redis host address | Yes |
+| REDIS_PORT | Redis port | Yes |
+| REDIS_PASSWORD | Redis password | Yes |
+| FRONTEND_URL | Frontend application URL | Yes |
+| SHORT_FRONTEND_URL | Shortened frontend URL | Yes |
 
 ## API Endpoints
 
