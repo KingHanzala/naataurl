@@ -30,11 +30,11 @@ public class EmailService {
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
-        logger.info("EmailService initialized with fromEmail: {}", fromEmail);
+        // logger.info("EmailService initialized with fromEmail: {}", fromEmail);
     }
 
     public void sendVerificationEmail(String to, String subject, String body) throws MessagingException {
-        logger.debug("Attempting to send verification email to: {}", to);
+        // logger.debug("Attempting to send verification email to: {}", to);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -42,9 +42,9 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(body, true);
-            logger.debug("Sending email with subject: {} to: {}", subject, to);
+            // logger.debug("Sending email with subject: {} to: {}", subject, to);
             mailSender.send(message);
-            logger.info("Successfully sent verification email to: {}", to);
+            // logger.info("Successfully sent verification email to: {}", to);
         } catch (Exception e) {
             logger.error("Failed to send verification email to: {}. Error: {}", to, e.getMessage(), e);
             throw e;
@@ -52,11 +52,11 @@ public class EmailService {
     }
 
     public void sendForgotPasswordEmail(String to, String url) throws MessagingException {
-        logger.debug("Attempting to send forgot password email to: {}", to);
+        // logger.debug("Attempting to send forgot password email to: {}", to);
         try {
             String content = loadContent(FORGOT_PASSWORD_CONTENT_PATH).replace("${url}", url);
             sendHtmlEmail(to, "Reset Your Password - MiniLink", content);
-            logger.info("Successfully sent forgot password email to: {}", to);
+            // logger.info("Successfully sent forgot password email to: {}", to);
         } catch (IOException e) {
             logger.error("Failed to load forgot password email content. Error: {}", e.getMessage(), e);
             throw new MessagingException("Failed to load forgot password email content", e);
@@ -67,11 +67,11 @@ public class EmailService {
     }
 
     public void sendSignupVerificationEmail(String to, String url) throws MessagingException {
-        logger.debug("Attempting to send signup verification email to: {}", to);
+        // logger.debug("Attempting to send signup verification email to: {}", to);
         try {
             String content = loadContent(SIGNUP_VERIFICATION_CONTENT_PATH).replace("${url}", url);
             sendHtmlEmail(to, "Verify Your Email - MiniLink", content);
-            logger.info("Successfully sent signup verification email to: {}", to);
+            // logger.info("Successfully sent signup verification email to: {}", to);
         } catch (IOException e) {
             logger.error("Failed to load signup verification email content. Error: {}", e.getMessage(), e);
             throw new MessagingException("Failed to load signup verification email content", e);
@@ -82,7 +82,7 @@ public class EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String content) throws MessagingException {
-        logger.debug("Attempting to send HTML email to: {}", to);
+        // logger.debug("Attempting to send HTML email to: {}", to);
         try {
             String template = loadTemplate();
             String htmlContent = template
@@ -102,14 +102,14 @@ public class EmailService {
             ClassPathResource logoResource = new ClassPathResource(LOGO_PATH);
             if (logoResource.exists()) {
                 helper.addInline("logo", logoResource);
-                logger.debug("Added logo to email");
+                // logger.debug("Added logo to email");
             } else {
-                logger.warn("Logo image not found at path: {}", LOGO_PATH);
+                // logger.warn("Logo image not found at path: {}", LOGO_PATH);
             }
 
-            logger.debug("Sending HTML email with subject: {} to: {}", subject, to);
+           //  logger.debug("Sending HTML email with subject: {} to: {}", subject, to);
             mailSender.send(message);
-            logger.info("Successfully sent HTML email to: {}", to);
+            // logger.info("Successfully sent HTML email to: {}", to);
         } catch (IOException e) {
             logger.error("Failed to load email template. Error: {}", e.getMessage(), e);
             throw new MessagingException("Failed to send HTML email", e);
@@ -120,21 +120,21 @@ public class EmailService {
     }
 
     private String loadTemplate() throws IOException {
-        logger.debug("Loading email template from: {}", EMAIL_TEMPLATE_PATH);
+        // logger.debug("Loading email template from: {}", EMAIL_TEMPLATE_PATH);
         ClassPathResource resource = new ClassPathResource(EMAIL_TEMPLATE_PATH);
         try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
             String template = FileCopyUtils.copyToString(reader);
-            logger.debug("Successfully loaded email template");
+            // logger.debug("Successfully loaded email template");
             return template;
         }
     }
 
     private String loadContent(String path) throws IOException {
-        logger.debug("Loading email content from: {}", path);
+        // logger.debug("Loading email content from: {}", path);
         ClassPathResource resource = new ClassPathResource(path);
         try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
             String content = FileCopyUtils.copyToString(reader);
-            logger.debug("Successfully loaded email content");
+            // logger.debug("Successfully loaded email content");
             return content;
         }
     }

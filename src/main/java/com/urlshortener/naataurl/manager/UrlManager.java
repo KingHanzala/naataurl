@@ -101,7 +101,7 @@ public class UrlManager {
             return urlResponse;
         }
         if (user == null) {
-            logger.info("User not found");
+            //logger.info("User not found");
             return null;
         } else if (user.getUsageCredits() == 0) {
             throw new Exception();

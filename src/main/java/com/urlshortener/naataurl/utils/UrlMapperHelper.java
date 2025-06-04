@@ -3,8 +3,6 @@ import lombok.Getter;
 
 import java.security.SecureRandom;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -13,7 +11,7 @@ import com.urlshortener.naataurl.service.UrlService;
 @Component
 public class UrlMapperHelper {
 
-    private static final Logger logger = LoggerFactory.getLogger(UrlMapperHelper.class);
+    // private static final Logger logger = LoggerFactory.getLogger(UrlMapperHelper.class);
     
     private static final String BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -36,20 +34,20 @@ public class UrlMapperHelper {
     public Long getUserIdFromAuthentication(Authentication authentication) {
 
         if (authentication == null) {
-            logger.error("Authentication is null");
+            // logger.error("Authentication is null");
             throw new IllegalArgumentException("Invalid authentication");
         }
 
         String token = (String) authentication.getPrincipal();
 
         if (token == null) {
-            logger.error("No JWT token found in the authentication");
+            // logger.error("No JWT token found in the authentication");
             throw new IllegalArgumentException("No JWT token found in the authentication");
         }
 
         Long userId = jwtUtil.extractUserId(token);
         if (userId == null) {
-            logger.error("User ID not found in JWT token");
+            // logger.error("User ID not found in JWT token");
             throw new IllegalArgumentException("User ID not found in JWT token");
         }
 

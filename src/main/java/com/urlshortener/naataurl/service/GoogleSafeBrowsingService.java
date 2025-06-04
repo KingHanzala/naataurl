@@ -33,7 +33,7 @@ public class GoogleSafeBrowsingService {
 
     public boolean isUrlSafe(String url) {
         try {
-            logger.info("Checking URL safety for: {}", url);
+            // logger.info("Checking URL safety for: {}", url);
 
             SafeBrowsingRequest request = new SafeBrowsingRequest();
             request.setThreatInfo(new ThreatInfo(
@@ -49,8 +49,8 @@ public class GoogleSafeBrowsingService {
             HttpEntity<SafeBrowsingRequest> entity = new HttpEntity<>(request, headers);
             String requestUrl = ENDPOINT + "?key=" + apiKey;
 
-            logger.debug("Making request to Google Safe Browsing API with request: {}",
-                    objectMapper.writeValueAsString(request));
+            // logger.debug("Making request to Google Safe Browsing API with request: {}",
+            //         objectMapper.writeValueAsString(request));
 
             ResponseEntity<SafeBrowsingResponse> response = restTemplate.exchange(
                     requestUrl,
@@ -65,8 +65,6 @@ public class GoogleSafeBrowsingService {
             if (!isSafe) {
                 logger.warn("URL {} flagged as unsafe. Threat matches: {}",
                         url, objectMapper.writeValueAsString(responseBody != null ? responseBody.getMatches() : null));
-            } else {
-                logger.info("URL {} passed safety check", url);
             }
 
             return isSafe;

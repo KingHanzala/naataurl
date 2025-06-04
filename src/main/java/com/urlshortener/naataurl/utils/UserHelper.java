@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Component
 public class UserHelper {
-    private static final Logger logger = LoggerFactory.getLogger(UserHelper.class);
+    // private static final Logger logger = LoggerFactory.getLogger(UserHelper.class);
 
     private @Autowired UserService userService;
     public String generateRandomToken(){
@@ -30,7 +30,7 @@ public class UserHelper {
 
     public boolean validateResetToken(User user){
         if(user.getTokenExpiry()!=null && user.getTokenExpiry().before(new Date())) {
-            logger.info("Password Reset Token expired for user {}", user.getUserEmail());
+            // logger.info("Password Reset Token expired for user {}", user.getUserEmail());
             generateAndSetUserToken(user);
             userService.saveUser(user);
             return true;

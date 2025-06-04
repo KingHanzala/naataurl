@@ -2,8 +2,6 @@ package com.urlshortener.naataurl.service;
 
 import com.urlshortener.naataurl.persistence.model.User;
 import com.urlshortener.naataurl.utils.JwtUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -21,7 +19,7 @@ import java.util.UUID;
 
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
-    private static final Logger log = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
+    // private static final Logger log = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
     @Autowired
     private UserService userService;
     @Autowired
@@ -38,7 +36,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
             String email = (String) oAuth2User.getAttributes().get("email");
             String name = (String) oAuth2User.getAttributes().get("name");
-            log.info("OAuth2 authentication success for email: {} with name {}", email, name);
+            // log.info("OAuth2 authentication success for email: {} with name {}", email, name);
             User user = userService.findByUserEmail(email);
             if (user == null) {
                 user = new User();
@@ -49,17 +47,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user.setOauth2Login(true);
                 user.setVerified(true);
                 userService.saveUser(user);
-                log.info("Created new user: {} ({})", name, email);
+                // log.info("Created new user: {} ({})", name, email);
             } else {
-                log.info("User already exists: {} ({})", user.getUserName(), user.getUserEmail());
+                // log.info("User already exists: {} ({})", user.getUserName(), user.getUserEmail());
             }
             String token = jwtUtils.generateToken(user);
-            log.info("Generated JWT token for user {}: {}", email, token);
+            // log.info("Generated JWT token for user {}: {}", email, token);
             // Redirect to frontend with token
             response.sendRedirect(frontendUrl + "/successCallback?token=" + token);
 
         } catch (Exception e) {
-            log.error("Error during OAuth2 login success handling", e);
+            // log.error("Error during OAuth2 login success handling", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "OAuth2 login error");
         }
     }

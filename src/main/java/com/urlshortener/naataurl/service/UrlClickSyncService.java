@@ -33,12 +33,12 @@ public class UrlClickSyncService {
     @Scheduled(fixedRateString = "${click.sync.interval.ms:3600000}")
     public void syncUrlClicks() {
         boolean updatesPending = false;
-        log.info("Starting URL clicks sync task");
+        // log.info("Starting URL clicks sync task");
         try {
             // Check last operation flag
             Object lastOpFlag = redisService.get(RedisHelper.LAST_OP_FLAG);
             if (lastOpFlag != null && !lastOpFlag.equals(1)) {
-                log.info("Skipping sync as last operation flag is set to {}", lastOpFlag);
+                // log.info("Skipping sync as last operation flag is set to {}", lastOpFlag);
                 return;
             }
 
@@ -65,18 +65,18 @@ public class UrlClickSyncService {
             } else {
                 redisService.set(RedisHelper.LAST_OP_FLAG, 0);
             }
-            log.info("Set last operation flag to 0 after successful sync");
+            // log.info("Set last operation flag to 0 after successful sync");
         } catch (Exception e) {
             log.error("Error during URL clicks sync: {}", e.getMessage(), e);
             // Ensure flag is set to 0 even if sync fails
             try {
                 redisService.set(RedisHelper.LAST_OP_FLAG, 1);
-                log.info("Set last operation flag to 1 after sync failure to retry in next sync");
+                // log.info("Set last operation flag to 1 after sync failure to retry in next sync");
             } catch (Exception ex) {
                 log.error("Failed to reset last operation flag after sync failure: {}", ex.getMessage());
             }
         }
-        log.info("Completed URL clicks sync task");
+        // log.info("Completed URL clicks sync task");
     }
 
     private void syncUrlClicksToDb(String shortUrl) {
@@ -84,14 +84,14 @@ public class UrlClickSyncService {
             // Get URL mapper from DB
             UrlMapper urlMapper = urlService.findByShortUrl(shortUrl);
             if (urlMapper == null) {
-                log.warn("URL mapper not found for shortUrl: {}", shortUrl);
+                // log.warn("URL mapper not found for shortUrl: {}", shortUrl);
                 return;
             }
 
             // Get current clicks from Redis
             Long redisClicks = redisManager.getUrlClicks(shortUrl);
             if (redisClicks == null) {
-                log.warn("No click data in Redis for shortUrl: {}", shortUrl);
+                // log.warn("No click data in Redis for shortUrl: {}", shortUrl);
                 return;
             }
 
@@ -105,7 +105,7 @@ public class UrlClickSyncService {
                 String lastUpdateKey = String.format(RedisHelper.URL_CLICKS_KEY_LAST_DBUPDATE, shortUrl);
                 redisService.set(lastUpdateKey, System.currentTimeMillis());
                 
-                log.info("Updated clicks for shortUrl: {} to {}", shortUrl, redisClicks);
+                // log.info("Updated clicks for shortUrl: {} to {}", shortUrl, redisClicks);
             }
         } catch (Exception e) {
             log.error("Error syncing clicks for shortUrl {}:", e.getMessage());
